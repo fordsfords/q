@@ -29,194 +29,165 @@
 <a href="q.sldoc.html#inc_selftest_h_ref_1" target="doc">00024</a>  #endif
 00025  
 00026  #include "q.h"
-00027  #include "bsem.h"
-00028  
-<a name="fence_def" id="fence_def"></a><a href="q.sldoc.html#fence_def_ref_1" target="doc">00029</a>  #define Q_FENCE 0x7d831f20   /* used for testing (random number generated at random.org) */
-00030  
-<a name="qerr_strs" id="qerr_strs"></a><a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00031</a>  /* This list of strings must be kept in sync with the
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00032</a>   * corresponding "QERR_*" constant definitions in "q.h".
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00033</a>   * It is used by the q_qerr_str() function. */
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00034</a>  static char *qerrs[] = {
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00035</a>      "QERR_OK",
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00036</a>      "QERR_BUG1",
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00037</a>      "QERR_BUG2",
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00038</a>      "QERR_BADSIZE",
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00039</a>      "QERR_MALLOC",
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00040</a>      "QERR_FULL",
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00041</a>      "QERR_EMPTY",
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00042</a>      "QERR_TIMEDOUT",
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00043</a>      "QERR_ERRNO",
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00044</a>      "QERR_BSEM",
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00045</a>      "BAD_QERR", NULL};
-<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00046</a>  #define BAD_QERR (sizeof(qerrs)/sizeof(qerrs[0]) - 2)
-00047  
-00048  
-<a name="q_s" id="q_s"></a><a href="q.sldoc.html#q_s_ref_1" target="doc">00049</a>  /* message element */
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00050</a>  struct q_msg_s {
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00051</a>      void *d;
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00052</a>      int in_use;
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00053</a>  };
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00054</a>  typedef struct q_msg_s q_msg_t;
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00055</a>  
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00056</a>  /* q.h contains an empty forward definition of "q_s", and defines "q_t" */
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00057</a>  struct q_s {
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00058</a>      unsigned int enq_cnt;     /* count of successful messages enqueued (tail pointer) */
-<a name="pad" id="pad"></a><a href="q.sldoc.html#pad_ref_1" target="doc">00059</a>      char enq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00060</a>  
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00061</a>      unsigned int deq_cnt;     /* count of successful messages dequeued (head pointer) */
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00062</a>      char deq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00063</a>  
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00064</a>      q_msg_t * volatile msgs;  /* Array of "q_size" elements */
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00065</a>      unsigned int size_mask;  /* Number of msgs elements minus 1 */
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00066</a>      /* make total size a multiple of cache line size, to prevent interference with whatever comes after */
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00067</a>      char final_pad[CACHE_LINE_SIZE - ( sizeof(unsigned int) + sizeof(void **) )];
-<a href="q.sldoc.html#q_s_ref_1" target="doc">00068</a>  };  /* struct q_s */
-00069  
-00070  
-00071  /* Internal function: return 1 if power of 2 */
-00072  static int is_power_2(unsigned int n)
-00073  {
-00074      /* Thanks to Alex Allain at http://www.cprogramming.com/tutorial/powtwosol.html for this cute algo. */
-00075      return ((n-1) &amp; n) == 0;
-00076  }  /* is_power_2 */
-00077  
-00078  
-00079  /* See q.h for doc */
-00080  char *q_qerr_str(qerr_t qerr)
-00081  {
-00082      if (qerr &gt;= BAD_QERR) { return qerrs[BAD_QERR]; }  /* bad qerr */
+00027  
+<a name="fence_def" id="fence_def"></a><a href="q.sldoc.html#fence_def_ref_1" target="doc">00028</a>  #define Q_FENCE 0x7d831f20   /* used for testing (random number generated at random.org) */
+00029  
+<a name="qerr_strs" id="qerr_strs"></a><a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00030</a>  /* This list of strings must be kept in sync with the
+<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00031</a>   * corresponding "QERR_*" constant definitions in "q.h".
+<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00032</a>   * It is used by the q_qerr_str() function. */
+<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00033</a>  static char *qerrs[] = {
+<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00034</a>      "QERR_OK",
+<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00035</a>      "QERR_BUG1",
+<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00036</a>      "QERR_BUG2",
+<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00037</a>      "QERR_BADSIZE",
+<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00038</a>      "QERR_MALLOCERR",
+<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00039</a>      "QERR_FULL",
+<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00040</a>      "QERR_EMPTY",
+<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00041</a>      "BAD_QERR", NULL};
+<a href="q.sldoc.html#qerr_strs_ref_1" target="doc">00042</a>  #define BAD_QERR (sizeof(qerrs)/sizeof(qerrs[0]) - 2)
+00043  
+00044  
+<a name="q_s" id="q_s"></a><a href="q.sldoc.html#q_s_ref_1" target="doc">00045</a>  /* message element */
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00046</a>  struct q_msg_s {
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00047</a>      void *d;
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00048</a>      int in_use;
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00049</a>  };
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00050</a>  typedef struct q_msg_s q_msg_t;
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00051</a>  
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00052</a>  /* q.h contains an empty forward definition of "q_s", and defines "q_t" */
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00053</a>  struct q_s {
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00054</a>      unsigned int enq_cnt;     /* count of successful messages enqueued (tail pointer) */
+<a name="pad" id="pad"></a><a href="q.sldoc.html#pad_ref_1" target="doc">00055</a>      char enq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00056</a>  
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00057</a>      unsigned int deq_cnt;     /* count of successful messages dequeued (head pointer) */
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00058</a>      char deq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00059</a>  
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00060</a>      q_msg_t * volatile msgs;  /* Array of "q_size" elements */
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00061</a>      unsigned int size_mask;  /* Number of msgs elements minus 1 */
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00062</a>      /* make total size a multiple of cache line size, to prevent interference with whatever comes after */
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00063</a>      char final_pad[CACHE_LINE_SIZE - ( sizeof(unsigned int) + sizeof(void **) )];
+<a href="q.sldoc.html#q_s_ref_1" target="doc">00064</a>  };  /* struct q_s */
+00065  
+00066  
+00067  /* Internal function: return 1 if power of 2 */
+00068  static int is_power_2(unsigned int n)
+00069  {
+00070      /* Thanks to Alex Allain at http://www.cprogramming.com/tutorial/powtwosol.html for this cute algo. */
+00071      return ((n-1) &amp; n) == 0;
+00072  }  /* is_power_2 */
+00073  
+00074  
+00075  /* See q.h for doc */
+00076  char *q_qerr_str(qerr_t qerr)
+00077  {
+00078      if (qerr &gt;= BAD_QERR) { return qerrs[BAD_QERR]; }  /* bad qerr */
+00079  
+00080      return qerrs[qerr];
+00081  }  /* q_qerr_str */
+00082  
 00083  
-00084      return qerrs[qerr];
-00085  }  /* q_qerr_str */
-00086  
-00087  
-00088  /* See q.h for doc */
-00089  qerr_t q_create(q_t **rtn_q, unsigned int q_size)
-00090  {
-<a name="qerr_chk" id="qerr_chk"></a><a href="q.sldoc.html#qerr_chk_ref_1" target="doc">00091</a>      /* Sanity check the error code definitions and strings */
-<a href="q.sldoc.html#qerr_chk_ref_1" target="doc">00092</a>      if (LAST_QERR != BAD_QERR - 1) { return QERR_BUG1; }  /* the QERR_* are out of sync with qerrs[] */
-00093      if (sizeof(q_t) % CACHE_LINE_SIZE != 0) { return QERR_BUG2; }  /* q_t not multiple of cache line size */
-00094  
-00095      /* Sanity check input size */
-00096      if (q_size &lt;= 1 || ! is_power_2(q_size)) { return QERR_BADSIZE; }
-00097  
-00098      /* Create queue object instance */
-00099      q_t *q = NULL;
-00100      int perr = posix_memalign((void **)&amp;q, CACHE_LINE_SIZE, sizeof(*q));
-00101      if (perr != 0 || q == NULL) { return QERR_MALLOC; }
-00102  
-<a name="alloc_msgs" id="alloc_msgs"></a><a href="q.sldoc.html#alloc_msgs_ref_1" target="doc">00103</a>      /* Allocate message storage array (one extra unused element for fence) */
-<a href="q.sldoc.html#alloc_msgs_ref_1" target="doc">00104</a>      q-&gt;msgs = NULL;
-<a href="q.sldoc.html#alloc_msgs_ref_1" target="doc">00105</a>      perr = posix_memalign((void **)&amp;q-&gt;msgs, CACHE_LINE_SIZE, (q_size + 1) * sizeof(q-&gt;msgs[0]) );
-00106      if (perr != 0 || q-&gt;msgs == NULL) { free(q);  return QERR_MALLOC; }
-00107  
-<a name="fence_set" id="fence_set"></a><a href="q.sldoc.html#fence_set_ref_1" target="doc">00108</a>      q-&gt;msgs[q_size].d = (void *)Q_FENCE;  /* used by unit tests to insure no overflow */
-00109  
-00110      /* empty the queue */
-00111      unsigned int i;
-00112      for (i = 0; i &lt; q_size; i++) {
-00113          q-&gt;msgs[i].in_use = 0;
-00114      }
-00115  
-00116      q-&gt;enq_cnt = 0;  /* Init the queue counters */
-00117      q-&gt;deq_cnt = 0;
-00118  
-00119      q-&gt;size_mask = q_size - 1;  /* bit mask to "and" enq_cnt and deq_cnt to get tail and head */
-00120  
-00121      /* Success */
-00122      *rtn_q = q;
-00123      return QERR_OK;
-00124  }  /* q_create */
-00125  
-00126  
-00127  /* See q.h for doc */
-00128  qerr_t q_delete(q_t *q)
-00129  {
-00130      /* Quick sanity check to make sure the queue didn't overflow */
-<a name="fence_chk" id="fence_chk"></a><a href="q.sldoc.html#fence_chk_ref_1" target="doc">00131</a>      if (q-&gt;msgs[q-&gt;size_mask + 1].d != (void *)Q_FENCE) { return QERR_BUG1; }
-00132      q-&gt;msgs[q-&gt;size_mask + 1].d = NULL;  /* remove fence to maybe detect double-delete */
-00133  
-00134      free((void *)q-&gt;msgs);
-00135      free(q);
+00084  /* See q.h for doc */
+00085  qerr_t q_create(q_t **rtn_q, unsigned int q_size)
+00086  {
+<a name="qerr_chk" id="qerr_chk"></a><a href="q.sldoc.html#qerr_chk_ref_1" target="doc">00087</a>      /* Sanity check the error code definitions and strings */
+<a href="q.sldoc.html#qerr_chk_ref_1" target="doc">00088</a>      if (LAST_QERR != BAD_QERR - 1) { return QERR_BUG1; }  /* the QERR_* are out of sync with qerrs[] */
+00089      if (sizeof(q_t) % CACHE_LINE_SIZE != 0) { return QERR_BUG2; }  /* q_t not multiple of cache line size */
+00090  
+00091      /* Sanity check input size */
+00092      if (q_size &lt;= 1 || ! is_power_2(q_size)) { return QERR_BADSIZE; }
+00093  
+00094      /* Create queue object instance */
+00095      q_t *q = NULL;
+00096      int perr = posix_memalign((void **)&amp;q, CACHE_LINE_SIZE, sizeof(*q));
+00097      if (perr != 0 || q == NULL) { return QERR_MALLOCERR; }
+00098  
+<a name="alloc_msgs" id="alloc_msgs"></a><a href="q.sldoc.html#alloc_msgs_ref_1" target="doc">00099</a>      /* Allocate message storage array (one extra unused element for fence) */
+<a href="q.sldoc.html#alloc_msgs_ref_1" target="doc">00100</a>      q-&gt;msgs = NULL;
+<a href="q.sldoc.html#alloc_msgs_ref_1" target="doc">00101</a>      perr = posix_memalign((void **)&amp;q-&gt;msgs, CACHE_LINE_SIZE, (q_size + 1) * sizeof(q-&gt;msgs[0]) );
+00102      if (perr != 0 || q-&gt;msgs == NULL) { free(q);  return QERR_MALLOCERR; }
+00103  
+<a name="fence_set" id="fence_set"></a><a href="q.sldoc.html#fence_set_ref_1" target="doc">00104</a>      q-&gt;msgs[q_size].d = (void *)Q_FENCE;  /* used by unit tests to insure no overflow */
+00105  
+00106      /* empty the queue */
+00107      unsigned int i;
+00108      for (i = 0; i &lt; q_size; i++) {
+00109          q-&gt;msgs[i].in_use = 0;
+00110      }
+00111  
+00112      q-&gt;enq_cnt = 0;  /* Init the queue counters */
+00113      q-&gt;deq_cnt = 0;
+00114  
+00115      q-&gt;size_mask = q_size - 1;  /* bit mask to "and" enq_cnt and deq_cnt to get tail and head */
+00116  
+00117      /* Success */
+00118      *rtn_q = q;
+00119      return QERR_OK;
+00120  }  /* q_create */
+00121  
+00122  
+00123  /* See q.h for doc */
+00124  qerr_t q_delete(q_t *q)
+00125  {
+00126      /* Quick sanity check to make sure the queue didn't overflow */
+<a name="fence_chk" id="fence_chk"></a><a href="q.sldoc.html#fence_chk_ref_1" target="doc">00127</a>      if (q-&gt;msgs[q-&gt;size_mask + 1].d != (void *)Q_FENCE) { return QERR_BUG1; }
+00128      q-&gt;msgs[q-&gt;size_mask + 1].d = NULL;  /* remove fence to maybe detect double-delete */
+00129  
+00130      free((void *)q-&gt;msgs);
+00131      free(q);
+00132  
+00133      return QERR_OK;
+00134  }  /* q_delete */
+00135  
 00136  
-00137      return QERR_OK;
-00138  }  /* q_delete */
-00139  
-00140  
-00141  /* See q.h for doc */
-<a name="enqueue" id="enqueue"></a><a href="q.sldoc.html#enqueue_ref_1" target="doc">00142</a>  qerr_t q_enq(q_t *q, void *m)
-<a href="q.sldoc.html#enqueue_ref_1" target="doc">00143</a>  {
-<a name="tailcalc" id="tailcalc"></a><a href="q.sldoc.html#tailcalc_ref_1" target="doc">00144</a>      unsigned int tail = (unsigned)(q-&gt;enq_cnt &amp; q-&gt;size_mask);
-<a href="q.sldoc.html#enqueue_ref_1" target="doc">00145</a>  
-<a href="q.sldoc.html#enqueue_ref_1" target="doc">00146</a>      /* Queue must always have at least one empty slot.  Make sure that
-<a href="q.sldoc.html#enqueue_ref_1" target="doc">00147</a>       * after the current tail is filled, the next slot will be empty. */
-<a href="q.sldoc.html#enqueue_ref_1" target="doc">00148</a>      unsigned int next_tail = (tail + 1) &amp; q-&gt;size_mask;
-<a href="q.sldoc.html#enqueue_ref_1" target="doc">00149</a>      if (q-&gt;msgs[next_tail].in_use) { return QERR_FULL; }  /* Queue is full, item not added */
-<a href="q.sldoc.html#enqueue_ref_1" target="doc">00150</a>  
-<a href="q.sldoc.html#enqueue_ref_1" target="doc">00151</a>      q-&gt;msgs[tail].d = (void * volatile)m;
-<a href="q.sldoc.html#enqueue_ref_1" target="doc">00152</a>      q-&gt;msgs[tail].in_use = 1;
-<a href="q.sldoc.html#enqueue_ref_1" target="doc">00153</a>      q-&gt;enq_cnt++;
-<a href="q.sldoc.html#enqueue_ref_1" target="doc">00154</a>      return QERR_OK;
-<a href="q.sldoc.html#enqueue_ref_1" target="doc">00155</a>  }  /* q_enq */
-00156  
-00157  
-00158  /* See q.h for doc */
-<a name="dequeue" id="dequeue"></a><a href="q.sldoc.html#dequeue_ref_1" target="doc">00159</a>  qerr_t q_deq(q_t *q, void **rtn_m)
-<a href="q.sldoc.html#dequeue_ref_1" target="doc">00160</a>  {
-<a name="headcalc" id="headcalc"></a><a href="q.sldoc.html#headcalc_ref_1" target="doc">00161</a>      unsigned int head = (unsigned)(q-&gt;deq_cnt &amp; q-&gt;size_mask);
-<a href="q.sldoc.html#dequeue_ref_1" target="doc">00162</a>      if (! q-&gt;msgs[head].in_use) { return QERR_EMPTY; }
-<a href="q.sldoc.html#dequeue_ref_1" target="doc">00163</a>  
-<a href="q.sldoc.html#dequeue_ref_1" target="doc">00164</a>      *rtn_m = (void *)q-&gt;msgs[head].d;
-<a href="q.sldoc.html#dequeue_ref_1" target="doc">00165</a>      q-&gt;msgs[head].in_use = 0;  /* mark it as empty */
-<a href="q.sldoc.html#dequeue_ref_1" target="doc">00166</a>      q-&gt;deq_cnt++;
-<a href="q.sldoc.html#dequeue_ref_1" target="doc">00167</a>      return QERR_OK;
-<a href="q.sldoc.html#dequeue_ref_1" target="doc">00168</a>  }  /* q_deq */
-00169  
-00170  
-00171  /* See q.h for doc */
-00172  int q_is_empty(q_t *q)
-00173  {
-00174      unsigned int head = (unsigned)(q-&gt;deq_cnt &amp; q-&gt;size_mask);
-00175      return (! q-&gt;msgs[head].in_use);
-00176  }  /* q_is_empty */
-00177  
-00178  
-00179  /* See q.h for doc */
-00180  int q_is_full(q_t *q)
-00181  {
-00182      unsigned int tail = (unsigned)(q-&gt;enq_cnt &amp; q-&gt;size_mask);
-00183      unsigned int next_tail = (tail + 1) &amp; q-&gt;size_mask;
-00184      return (q-&gt;msgs[next_tail].in_use);
-00185  }  /* q_is_full */
-00186  
-00187  
-00188  /* See q.h for doc */
-00189  qerr_t q_blk_enq(q_t *q, void **rtn_m, struct timespec *abstime)
-00190  {
-00191      errno = 0;
-00192      qerr_t qerr = q_enq(q, rtn_m);
-00193      if (qerr == QERR_FULL) {
-00194          /* does caller want to wait for queue to become non-full? */
-00195          if (abstime == NULL) { return QERR_FULL; }  /* don't wait */
-00196  
-00197          /* wait for queue not full */
-00198          int berr = bsem_wait(q-&gt;enq_bsem, abstime);
-00199          if (berr == BSEMERR_TIMEDOUT) { return QERR_TIMEDOUT; }
-00200          else if (berr != BSEMERR_OK) { return QERR_BSEM; }
-00201  
-00202          qerr = q_enq(q, rtn_m);
-00203          if (qerr == QERR_FULL) { return QERR_BUG1; }
-00204      }
-00205  
-00206      /* if q_blk_deq is waiting, wake it up */
-00207      int berr = bsem_post(q-&gt;enq_bsem);  /* wait for queue not full */
-00208  
-00209      return qerr;
-00210  }  /* q_blk_enq */
-00211  
-00212  
-<a name="inc_selftest_c" id="inc_selftest_c"></a><a href="q.sldoc.html#inc_selftest_c_ref_1" target="doc">00213</a>  /* If built with "-DSELFTEST" then include main() for unit testing. */
-<a href="q.sldoc.html#inc_selftest_c_ref_1" target="doc">00214</a>  #ifdef SELFTEST
-<a href="q.sldoc.html#inc_selftest_c_ref_1" target="doc">00215</a>  #include "q_selftest.c"
-<a href="q.sldoc.html#inc_selftest_c_ref_1" target="doc">00216</a>  #endif
+00137  /* See q.h for doc */
+<a name="enqueue" id="enqueue"></a><a href="q.sldoc.html#enqueue_ref_1" target="doc">00138</a>  qerr_t q_enq(q_t *q, void *m)
+<a href="q.sldoc.html#enqueue_ref_1" target="doc">00139</a>  {
+<a name="tailcalc" id="tailcalc"></a><a href="q.sldoc.html#tailcalc_ref_1" target="doc">00140</a>      unsigned int tail = (unsigned)(q-&gt;enq_cnt &amp; q-&gt;size_mask);
+<a href="q.sldoc.html#enqueue_ref_1" target="doc">00141</a>  
+<a href="q.sldoc.html#enqueue_ref_1" target="doc">00142</a>      /* Queue must always have at least one empty slot.  Make sure that
+<a href="q.sldoc.html#enqueue_ref_1" target="doc">00143</a>       * after the current tail is filled, the next slot will be empty. */
+<a href="q.sldoc.html#enqueue_ref_1" target="doc">00144</a>      unsigned int next_tail = (tail + 1) &amp; q-&gt;size_mask;
+<a href="q.sldoc.html#enqueue_ref_1" target="doc">00145</a>      if (q-&gt;msgs[next_tail].in_use) { return QERR_FULL; }  /* Queue is full, item not added */
+<a href="q.sldoc.html#enqueue_ref_1" target="doc">00146</a>  
+<a href="q.sldoc.html#enqueue_ref_1" target="doc">00147</a>      q-&gt;msgs[tail].d = (void * volatile)m;
+<a href="q.sldoc.html#enqueue_ref_1" target="doc">00148</a>      q-&gt;msgs[tail].in_use = 1;
+<a href="q.sldoc.html#enqueue_ref_1" target="doc">00149</a>      q-&gt;enq_cnt++;
+<a href="q.sldoc.html#enqueue_ref_1" target="doc">00150</a>      return QERR_OK;
+<a href="q.sldoc.html#enqueue_ref_1" target="doc">00151</a>  }  /* q_enq */
+00152  
+00153  
+00154  /* See q.h for doc */
+<a name="dequeue" id="dequeue"></a><a href="q.sldoc.html#dequeue_ref_1" target="doc">00155</a>  qerr_t q_deq(q_t *q, void **rtn_m)
+<a href="q.sldoc.html#dequeue_ref_1" target="doc">00156</a>  {
+<a name="headcalc" id="headcalc"></a><a href="q.sldoc.html#headcalc_ref_1" target="doc">00157</a>      unsigned int head = (unsigned)(q-&gt;deq_cnt &amp; q-&gt;size_mask);
+<a href="q.sldoc.html#dequeue_ref_1" target="doc">00158</a>      if (! q-&gt;msgs[head].in_use) { return QERR_EMPTY; }
+<a href="q.sldoc.html#dequeue_ref_1" target="doc">00159</a>  
+<a href="q.sldoc.html#dequeue_ref_1" target="doc">00160</a>      *rtn_m = (void *)q-&gt;msgs[head].d;
+<a href="q.sldoc.html#dequeue_ref_1" target="doc">00161</a>      q-&gt;msgs[head].in_use = 0;  /* mark it as empty */
+<a href="q.sldoc.html#dequeue_ref_1" target="doc">00162</a>      q-&gt;deq_cnt++;
+<a href="q.sldoc.html#dequeue_ref_1" target="doc">00163</a>      return QERR_OK;
+<a href="q.sldoc.html#dequeue_ref_1" target="doc">00164</a>  }  /* q_deq */
+00165  
+00166  
+00167  /* See q.h for doc */
+00168  int q_is_empty(q_t *q)
+00169  {
+00170      unsigned int head = (unsigned)(q-&gt;deq_cnt &amp; q-&gt;size_mask);
+00171      return (! q-&gt;msgs[head].in_use);
+00172  }  /* q_is_empty */
+00173  
+00174  
+00175  /* See q.h for doc */
+00176  int q_is_full(q_t *q)
+00177  {
+00178      unsigned int tail = (unsigned)(q-&gt;enq_cnt &amp; q-&gt;size_mask);
+00179      unsigned int next_tail = (tail + 1) &amp; q-&gt;size_mask;
+00180      return (q-&gt;msgs[next_tail].in_use);
+00181  }  /* q_is_full */
+00182  
+00183  
+<a name="inc_selftest_c" id="inc_selftest_c"></a><a href="q.sldoc.html#inc_selftest_c_ref_1" target="doc">00184</a>  /* If built with "-DSELFTEST" then include main() for unit testing. */
+<a href="q.sldoc.html#inc_selftest_c_ref_1" target="doc">00185</a>  #ifdef SELFTEST
+<a href="q.sldoc.html#inc_selftest_c_ref_1" target="doc">00186</a>  #include "q_selftest.c"
+<a href="q.sldoc.html#inc_selftest_c_ref_1" target="doc">00187</a>  #endif
 </pre></small></body></html>

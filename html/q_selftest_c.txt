@@ -307,7 +307,7 @@ int main(int argc, char **argv)
 	if (strcmp(q_qerr_str(QERR_BUG1), "QERR_BUG1") != 0) { ERR("q_qerr_str BUG1"); }
 	if (strcmp(q_qerr_str(QERR_BUG2), "QERR_BUG2") != 0) { ERR("q_qerr_str BUG2"); }
 	if (strcmp(q_qerr_str(QERR_BADSIZE), "QERR_BADSIZE") != 0) { ERR("q_qerr_str BADSIZE"); }
-	if (strcmp(q_qerr_str(QERR_MALLOC), "QERR_MALLOC") != 0) { ERR("q_qerr_str MALLOC"); }
+	if (strcmp(q_qerr_str(QERR_MALLOCERR), "QERR_MALLOCERR") != 0) { ERR("q_qerr_str MALLOCERR"); }
 	if (strcmp(q_qerr_str(QERR_FULL), "QERR_FULL") != 0) { ERR("q_qerr_str FULL"); }
 	if (strcmp(q_qerr_str(QERR_EMPTY), "QERR_EMPTY") != 0) { ERR("q_qerr_str EMPTY"); }
 	if (strcmp(q_qerr_str(LAST_QERR), "QERR_EMPTY") != 0) { ERR("q_qerr_str LAST_QERR"); }

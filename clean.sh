@@ -5,6 +5,7 @@
 # To the extent possible under law, Steve Ford has waived all copyright and related or
 # neighboring rights to this work.  This work is published from: United States.
 
+rm -f `find . -name '*.tar' -print`
 rm -f `find . -name '*.log' -print`
 rm -f `find . -name '*_perf' -print`
 rm -f `find . -name '*_selftest' -print`

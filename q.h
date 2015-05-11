@@ -20,12 +20,10 @@ typedef struct q_s q_t;           /* object type of queue instance */
 #define QERR_BUG1 1       /* Internal software bug - should never happen */
 #define QERR_BUG2 2       /* Internal software bug - should never happen */
 #define QERR_BADSIZE 3    /* q_size parameter invalid */
-#define QERR_MALLOC 4     /* No memory available */
+#define QERR_MALLOCERR 4  /* No memory available */
 #define QERR_FULL 5       /* No room in queue */
 #define QERR_EMPTY 6      /* No messages in queue */
-#define QERR_ERRNO 7      /* Library error (call errno for error code) */
-#define QERR_TIMEOUT 8    /* User-supplied timeout exceeded */
-#define LAST_QERR 8   /* Set to value of last "QERR_*" definition */
+#define LAST_QERR 6   /* Set to value of last "QERR_*" definition */
 
 qerr_t q_create(q_t **rtn_q, unsigned int q_size);
 /* Create an instance of a queue.
@@ -59,12 +57,6 @@ int q_is_empty(q_t *q);
 int q_is_full(q_t *q);
 /* Returns 1 if queue is full (contains q_size-1 message), 0 otherwise.
  * q : Queue instance handle. */
-
-qerr_t q_blk_enq( q_t *q, void *m, int timeout);
-/* Add a message to the queue.
- * q : Queue instance handle.
- * m : Message to enqueue.
- * Returns QERR_OK on success, QERR_FULL if queue full, or other QERR_* value on error. */
 
 char *q_qerr_str(qerr_t qerr);
 /* Returns a string representation of a queue API return error code.

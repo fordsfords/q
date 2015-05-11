@@ -24,7 +24,6 @@
 #endif
 
 #include "q.h"
-#include "bsem.h"
 
 #define Q_FENCE 0x7d831f20   /* used for testing (random number generated at random.org) */
 
@@ -36,12 +35,9 @@ static char *qerrs[] = {
 	"QERR_BUG1",
 	"QERR_BUG2",
 	"QERR_BADSIZE",
-	"QERR_MALLOC",
+	"QERR_MALLOCERR",
 	"QERR_FULL",
 	"QERR_EMPTY",
-	"QERR_TIMEDOUT",
-	"QERR_ERRNO",
-	"QERR_BSEM",
 	"BAD_QERR", NULL};
 #define BAD_QERR (sizeof(qerrs)/sizeof(qerrs[0]) - 2)
 
@@ -98,12 +94,12 @@ qerr_t q_create(q_t **rtn_q, unsigned int q_size)
 	/* Create queue object instance */
 	q_t *q = NULL;
 	int perr = posix_memalign((void **)&q, CACHE_LINE_SIZE, sizeof(*q));
-	if (perr != 0 || q == NULL) { return QERR_MALLOC; }
+	if (perr != 0 || q == NULL) { return QERR_MALLOCERR; }
 
 	/* Allocate message storage array (one extra unused element for fence) */
 	q->msgs = NULL;
 	perr = posix_memalign((void **)&q->msgs, CACHE_LINE_SIZE, (q_size + 1) * sizeof(q->msgs[0]) );
-	if (perr != 0 || q->msgs == NULL) { free(q);  return QERR_MALLOC; }
+	if (perr != 0 || q->msgs == NULL) { free(q);  return QERR_MALLOCERR; }
 
 	q->msgs[q_size].d = (void *)Q_FENCE;  /* used by unit tests to insure no overflow */
 
@@ -183,31 +179,6 @@ int q_is_full(q_t *q)
 	unsigned int next_tail = (tail + 1) & q->size_mask;
 	return (q->msgs[next_tail].in_use);
 }  /* q_is_full */
-
-
-/* See q.h for doc */
-qerr_t q_blk_enq(q_t *q, void **rtn_m, struct timespec *abstime)
-{
-	errno = 0;
-	qerr_t qerr = q_enq(q, rtn_m);
-	if (qerr == QERR_FULL) {
-		/* does caller want to wait for queue to become non-full? */
-		if (abstime == NULL) { return QERR_FULL; }  /* don't wait */
-
-		/* wait for queue not full */
-		int berr = bsem_wait(q->enq_bsem, abstime);
-		if (berr == BSEMERR_TIMEDOUT) { return QERR_TIMEDOUT; }
-		else if (berr != BSEMERR_OK) { return QERR_BSEM; }
-
-		qerr = q_enq(q, rtn_m);
-		if (qerr == QERR_FULL) { return QERR_BUG1; }
-	}
-
-	/* if q_blk_deq is waiting, wake it up */
-	int berr = bsem_post(q->enq_bsem);  /* wait for queue not full */
-
-	return qerr;
-}  /* q_blk_enq */
 
 
 /* If built with "-DSELFTEST" then include main() for unit testing. */

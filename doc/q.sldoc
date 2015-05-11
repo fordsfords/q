@@ -3,10 +3,10 @@
   <head>
     <meta http-equiv="content-type" content="text/html;
       charset=windows-1252">
-    <title>q Module Internals</title>
+    <title>q - a Fast Lock-Free Queue</title>
   </head>
   <body>
-    <h1><a class="mozTocH1" name="mozTocId336658"></a>q Module Internals<br>
+    <h1><a class="mozTocH1" name="mozTocId336658"></a>q Module<br>
     </h1>
     <p>This is a <a href="http://geeky-boy.com/semlit/">semi-literate
         document</a> for the module <tt>q.c</tt> and it's associated
@@ -16,7 +16,7 @@
     =semlit,include, copyright.sldoc=<br>
     <ol class="readonly" id="mozToc">
       <!--mozToc h1 1 h2 2 h3 3 h4 4 h5 5 h6 6-->
-      <li><a href="#mozTocId336658">q Module Internals </a>
+      <li><a href="#mozTocId336658">q Module </a>
         <ol>
           <li><a href="#mozTocId638880">Introduction</a></li>
           <li><a href="#mozTocId641188">Q API</a></li>
@@ -106,7 +106,6 @@
     Ford in 2014, the algorithm was influenced by John D. Valois' 1994
     paper, "<a
 href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implementing_lock_free.pdf"><i>Implementing
-
 
 
 
@@ -261,14 +260,12 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
 
 
 
-
     The API sees an empty forward reference and type in <tt>q.h</tt>:
     =semlit,insert,q_t=<br>
     <br>
     To improve threading efficiency, the variables used by the enqueue
     and dequeue threads are separated and placed on independent <a
       href="https://en.wikipedia.org/wiki/Cache_line#Cache_entries">cache
-
 
 
 
@@ -307,7 +304,6 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     bit later, the ex extra element is set to <tt>Q_FENCE</tt>:
     =semlit,insert,fence_set= <tt>Q_FENCE</tt> is a manifest constant
     random number (generated at <a href="http://random.org/">random.org</a>):
-
 
 
 
