@@ -8,7 +8,7 @@
   <body>
     <h1><a class="mozTocH1" name="mozTocId336658"></a>q Module<br>
     </h1>
-    <p>This is a <a href="http://geeky-boy.com/semlit/">semi-literate
+    <p>This is a <a href="https://github.com/fordsfords/semlit/tree/gh-pages">semi-literate
         document</a> for the module <tt>q.c</tt> and it's associated
       files.&nbsp; This module implements a fast, lock-free,
       non-blocking queue.<br>
@@ -369,7 +369,7 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     The web-based software documentation you are looking at is called
     "SemiLiterate Documentation".&nbsp; The system which generates the
     doc is called "semlit", and is freely available at <a
-      href="http://geeky-boy.com/semlit">http://geeky-boy.com/semlit</a>.<br>
+      href="https://github.com/fordsfords/semlit/tree/gh-pages">https://github.com/fordsfords/semlit/tree/gh-pages</a>.<br>
     <br>
     If you are a user of the q module, you probably don't care about any
     of this and you can probably ignore it.&nbsp; However, if you are a
@@ -384,7 +384,7 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     files by running <tt>bld.sh</tt>.<br>
     <br>
     So, first thing to do is download and install <a
-      href="http://geeky-boy.com/semlit">semlit</a>.&nbsp; Make sure
+      href="https://github.com/fordsfords/semlit/tree/gh-pages">semlit</a>.&nbsp; Make sure
     that semlit.sh is in your <tt>PATH</tt> (otherwise the q module's "<tt>bld.sh</tt>"
     will skip the semlit stuff).&nbsp; Then use an html editor (like <a
       href="http://www.seamonkey-project.org/releases/seamonkey2.13/">SeaMonkey</a>)
@@ -399,24 +399,6 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
         package (optional).</li>
       <li><tt>clean.sh</tt> - remove temporary files.</li>
       <li><tt>tst.sh</tt> - run the unit tests.</li>
-      <li><tt>tar.sh</tt> - create tarball.&nbsp; Uses "<tt>00VERSION.TXT</tt>"
-        to set the version number.</li>
-      <li><tt>publish.sh</tt> - transfer to geeky-boy.com account.&nbsp;
-        Uses "<tt>00VERSION.TXT</tt>" to set the version number.<br>
-      </li>
     </ul>
-    <p>When the package version number needs to be bumped:<br>
-    </p>
-    <ul>
-      <li>Update the "00VERSION.txt" file.&nbsp; This file is used by
-        the scripts to properly name everything.</li>
-      <li>Update this document - both the initial header line and the
-        name of the tar file in the introduction and quick start
-        sections.&nbsp; (Some of the references are links, meaning you
-        have to change both the displayed link and the href.&nbsp; I
-        find it easier to just edit the index.html with a normal text
-        editor and search for "[0-9]\.[0-9]".</li>
-    </ul>
-    <br>
   </body>
 </html>

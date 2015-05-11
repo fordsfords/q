@@ -1,9 +1,9 @@
-/* q_selftest.c - unit test for q module.  See http://geeky-boy.com/q/ */
+/* q_selftest.c - unit test for q module.  See https://github.com/fordsfords/q/tree/gh-pages */
 /* This file is included by q.c for unit testing when it is built with "-DSELFTEST".
  * It is structured this way so that whitebox testing can be performed (i.e. selftest code has
  * visibility into q.c's private structures). */
 /*
-# This code and its documentation is Copyright 2014 Steven Ford, sford@geeky-boy.com
+# This code and its documentation is Copyright 2014 Steven Ford, http://geeky-boy.com
 # and licensed under Creative Commons "CC0": http://creativecommons.org/publicdomain/zero/1.0/
 # To the extent possible under law, Steve Ford has waived all copyright and related or
 # neighboring rights to this work.  This work is published from: United States.

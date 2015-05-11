@@ -14,7 +14,7 @@ To the extent possible under law, the contributors to this project have
 waived all copyright and related or neighboring rights to this work.
 In other words, you can use this code for any purpose without any
 restrictions.  This work is published from: United States.  The project home
-is https://github.com/fordsfords/semlit
+is https://github.com/fordsfords/q/tree/gh-pages
 
 To contact me, Steve Ford, project owner, you can find my email address
 at http://geeky-boy.com.  Can't see it?  Keep looking.
@@ -97,11 +97,11 @@ char *q_qerr_str(qerr_t qerr);
 
 ## Release Notes
 
-0.1 (19-May-2014)
+* 0.1 (19-May-2014)
 
     Initial pre-release.
 
-0.2 (1-Jun-2014)
+* 0.2 (1-Jun-2014)
 
     API CHANGE: changed terminology "status' to "error".  Specifically, changed:
 
@@ -114,6 +114,6 @@ char *q_qerr_str(qerr_t qerr);
     Added directory "alternates" containing variations on the queue algorithm.
 Minor corrections in q_selftest.c.
 
-0.3 (11-May-2015)
+* 0.3 (11-May-2015)
 
     Moved to Github.
