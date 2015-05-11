@@ -1,0 +1,80 @@
+<html><head><title>q_h.txt</title></head>
+<html><head><title>q_h.txt</title></head>
+<body><h1>q_h.txt</h1>
+<p><em>Hint:</em> do not cut-and-paste from this page.  Instead, right-click on '<a href="q_h.txt">q_h.txt</a>' and save file.
+<small><pre>
+00001  /* q.h - lock-free, non-blocking message queue.  See http://geeky-boy.com/q/ */
+00002  /*
+00003  # This code and its documentation is Copyright 2014 Steven Ford, sford@geeky-boy.com
+00004  # and licensed under Creative Commons "CC0": http://creativecommons.org/publicdomain/zero/1.0/
+00005  # To the extent possible under law, Steve Ford has waived all copyright and related or
+00006  # neighboring rights to this work.  This work is published from: United States.
+00007  */
+00008  
+00009  #ifndef Q_H
+00010  #define Q_H
+00011  
+00012  typedef unsigned int qerr_t;     /* see QERR_* definitions above */
+00013  
+<a name="q_t" id="q_t"></a><a href="q.sldoc.html#q_t_ref_1" target="doc">00014</a>  struct q_s;                       /* forward (opaque) definition */
+<a href="q.sldoc.html#q_t_ref_1" target="doc">00015</a>  typedef struct q_s q_t;           /* object type of queue instance */
+00016  
+<a name="apis" id="apis"></a><a name="qerr_defs" id="qerr_defs"></a><a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00017</a>  /* Most q APIs return "qerr_t".  These definitions must
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00018</a>   * be kept in sync with the "qerrs" string array in "q.c". */
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00019</a>  #define QERR_OK 0         /* Success */
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00020</a>  #define QERR_BUG1 1       /* Internal software bug - should never happen */
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00021</a>  #define QERR_BUG2 2       /* Internal software bug - should never happen */
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00022</a>  #define QERR_BADSIZE 3    /* q_size parameter invalid */
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00023</a>  #define QERR_MALLOC 4     /* No memory available */
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00024</a>  #define QERR_FULL 5       /* No room in queue */
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00025</a>  #define QERR_EMPTY 6      /* No messages in queue */
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00026</a>  #define QERR_ERRNO 7      /* Library error (call errno for error code) */
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00027</a>  #define QERR_TIMEOUT 8    /* User-supplied timeout exceeded */
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00028</a>  #define LAST_QERR 8   /* Set to value of last "QERR_*" definition */
+<a href="q.sldoc.html#apis_ref_1" target="doc">00029</a>  
+<a href="q.sldoc.html#apis_ref_1" target="doc">00030</a>  qerr_t q_create(q_t **rtn_q, unsigned int q_size);
+<a href="q.sldoc.html#apis_ref_1" target="doc">00031</a>  /* Create an instance of a queue.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00032</a>   * rtn_q  : Pointer to caller's queue instance handle.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00033</a>   * q_size : Number of queue elements to allocate.  Must be &gt; 1 and a power
+<a href="q.sldoc.html#apis_ref_1" target="doc">00034</a>   *          of 2.  Due to the nature of the algorithm used, a maximum of
+<a href="q.sldoc.html#apis_ref_1" target="doc">00035</a>   *          q_size - 1 elements can actually be stored in the queue.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00036</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
+<a href="q.sldoc.html#apis_ref_1" target="doc">00037</a>  
+<a href="q.sldoc.html#apis_ref_1" target="doc">00038</a>  qerr_t q_delete(q_t *q);
+<a href="q.sldoc.html#apis_ref_1" target="doc">00039</a>  /* Delete an instance of a queue.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00040</a>   * q : Queue instance handle.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00041</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
+<a href="q.sldoc.html#apis_ref_1" target="doc">00042</a>  
+<a href="q.sldoc.html#apis_ref_1" target="doc">00043</a>  qerr_t q_enq( q_t *q, void *m);
+<a href="q.sldoc.html#apis_ref_1" target="doc">00044</a>  /* Add a message to the queue.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00045</a>   * q : Queue instance handle.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00046</a>   * m : Message to enqueue.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00047</a>   * Returns QERR_OK on success, QERR_FULL if queue full, or other QERR_* value on error. */
+<a href="q.sldoc.html#apis_ref_1" target="doc">00048</a>  
+<a href="q.sldoc.html#apis_ref_1" target="doc">00049</a>  qerr_t q_deq(q_t *q, void **rtn_m);
+<a href="q.sldoc.html#apis_ref_1" target="doc">00050</a>  /* Remove a message from the queue.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00051</a>   * q     : Queue instance handle.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00052</a>   * rtn_m : Pointer to caller's message handle.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00053</a>   * Returns QERR_OK on success, QERR_EMPTY if queue empty, or other QERR_* value on error. */
+<a href="q.sldoc.html#apis_ref_1" target="doc">00054</a>  
+<a href="q.sldoc.html#apis_ref_1" target="doc">00055</a>  int q_is_empty(q_t *q);
+<a href="q.sldoc.html#apis_ref_1" target="doc">00056</a>  /* Returns 1 if queue is empty (contains no messages), 0 otherwise.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00057</a>   * q : Queue instance handle. */
+<a href="q.sldoc.html#apis_ref_1" target="doc">00058</a>  
+<a href="q.sldoc.html#apis_ref_1" target="doc">00059</a>  int q_is_full(q_t *q);
+<a href="q.sldoc.html#apis_ref_1" target="doc">00060</a>  /* Returns 1 if queue is full (contains q_size-1 message), 0 otherwise.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00061</a>   * q : Queue instance handle. */
+<a href="q.sldoc.html#apis_ref_1" target="doc">00062</a>  
+<a href="q.sldoc.html#apis_ref_1" target="doc">00063</a>  qerr_t q_blk_enq( q_t *q, void *m, int timeout);
+<a href="q.sldoc.html#apis_ref_1" target="doc">00064</a>  /* Add a message to the queue.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00065</a>   * q : Queue instance handle.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00066</a>   * m : Message to enqueue.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00067</a>   * Returns QERR_OK on success, QERR_FULL if queue full, or other QERR_* value on error. */
+<a href="q.sldoc.html#apis_ref_1" target="doc">00068</a>  
+<a href="q.sldoc.html#apis_ref_1" target="doc">00069</a>  char *q_qerr_str(qerr_t qerr);
+<a href="q.sldoc.html#apis_ref_1" target="doc">00070</a>  /* Returns a string representation of a queue API return error code.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00071</a>   * qerr : value returned by most q APIs indicating success or faiure.
+<a href="q.sldoc.html#apis_ref_1" target="doc">00072</a>   * (See q.h for list of QERR_* definitions.) */
+00073  
+00074  #endif  /* Q_H */
+</pre></small></body></html>

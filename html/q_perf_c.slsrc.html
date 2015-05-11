@@ -1,0 +1,391 @@
+<html><head><title>q_perf_c.txt</title></head>
+<html><head><title>q_perf_c.txt</title></head>
+<body><h1>q_perf_c.txt</h1>
+<p><em>Hint:</em> do not cut-and-paste from this page.  Instead, right-click on '<a href="q_perf_c.txt">q_perf_c.txt</a>' and save file.
+<small><pre>
+00001  /* q_perf.c - This tool measures performance of q.c  See http://geeky-boy.com/q/ */
+00002  /*
+00003  # This code and its documentation is Copyright 2014 Steven Ford, sford@geeky-boy.com
+00004  # and licensed under Creative Commons "CC0": http://creativecommons.org/publicdomain/zero/1.0/
+00005  # To the extent possible under law, Steve Ford has waived all copyright and related or
+00006  # neighboring rights to this work.  This work is published from: United States.
+00007  */
+00008  
+00009  #include &lt;stdlib.h&gt;
+00010  #include &lt;unistd.h&gt;
+00011  #include &lt;pthread.h&gt;
+00012  #include &lt;string.h&gt;
+00013  #include &lt;errno.h&gt;
+00014  #include &lt;sys/time.h&gt;
+00015  #include &lt;stdio.h&gt;
+00016  #include "q.h"
+00017  
+00018  /* some platforms require the program to declare these external */
+00019  extern char *optarg;
+00020  extern int optind;
+00021  extern int optopt;
+00022  extern int opterr;
+00023  extern int optreset;
+00024  
+00025  #define UINT unsigned int
+00026  #define V2I (unsigned long long)(void *)
+00027  #define I2V (void *)(unsigned long long)
+00028  
+00029  #define CHK_QERR_E(s,e) do { if (s != e) { printf("ERROR %s[%d]: qerr=%u\n", __FILE__, __LINE__, s);  exit(1); } } while (0)
+00030  #define CHK_QERR(s) do { if (s != QERR_OK) { printf("ERROR %s[%d]: %d (%s)\n", __FILE__, __LINE__, s, q_qerr_str(s)); exit(1); } } while (0)
+00031  #define CHK_PTHREAD_ERR(s) do { if (s != 0) { printf("ERROR %s[%d]: %d (%s)\n", __FILE__, __LINE__, s, strerror(s)); exit(1); } } while (0)
+00032  #define ERR(s) do { printf("ERROR %s[%d]: %s\n", __FILE__, __LINE__, s); exit(1); } while (0)
+00033  
+00034  struct tst_s {
+00035      UINT enq_cnt;
+00036      UINT full_cnt;
+00037      UINT full_spans;
+00038      UINT max_full_span;
+00039      char padding1[CACHE_LINE_SIZE - 4*sizeof(UINT)];
+00040      UINT deq_cnt;
+00041      UINT empty_cnt;
+00042      UINT empty_spans;
+00043      UINT max_empty_span;
+00044      char padding2[CACHE_LINE_SIZE - 4*sizeof(UINT)];
+00045      q_t *q1;
+00046      q_t *q2;
+00047      UINT loops;
+00048  };
+00049  typedef struct tst_s tst_t;
+00050  
+00051  
+00052  /* globals for testing */
+00053  struct timeval tmp_tv;
+00054  UINT phase1_start;
+00055  UINT phase1_end;
+00056  UINT phase2_start;
+00057  UINT phase2_end;
+00058  
+00059  
+00060  void *enq_thread(void *in_arg)
+00061  {
+00062      tst_t *test_data = (tst_t *)in_arg;
+00063      q_t *q = test_data-&gt;q1;
+00064      UINT full_span = 0;
+00065      UINT enq_cnt = 0;
+00066      UINT full_cnt = 0;
+00067      UINT full_spans = 0;
+00068      UINT max_full_span = 0;
+00069  
+00070      unsigned int msg_num = test_data-&gt;loops;
+00071      while (msg_num &gt; 0) {
+00072          qerr_t qerr = q_enq(q, I2V msg_num);
+00073          if (qerr == QERR_OK) {
+00074              /* prepare next message contents */
+00075              msg_num--;
+00076  
+00077              /* collect stats */
+00078              enq_cnt++;
+00079              if (full_span &gt; max_full_span) {
+00080                  max_full_span = full_span; }
+00081              full_span = 0;
+00082          } else if (qerr == QERR_FULL) {
+00083              /* queue empty, collect stats */
+00084              full_cnt++;
+00085              if (full_span == 0) {
+00086                  full_spans++; }
+00087              full_span++;
+00088          } else CHK_QERR(qerr);
+00089      }  /* while */
+00090  
+00091      gettimeofday(&amp;tmp_tv, NULL);  phase1_end = 1000000llu * (UINT)tmp_tv.tv_sec + (UINT)tmp_tv.tv_usec;
+00092  
+00093      test_data-&gt;enq_cnt = enq_cnt;
+00094      test_data-&gt;full_cnt = full_cnt;
+00095      test_data-&gt;full_spans = full_spans;
+00096      test_data-&gt;max_full_span = max_full_span;
+00097  
+00098      pthread_exit(NULL);
+00099      return NULL;  /* don't need this, but keep the compiler happy */
+00100  }  /* enq_thread */
+00101  
+00102  
+00103  void *deq_thread(void *in_arg)
+00104  {
+00105      tst_t *test_data = (tst_t *)in_arg;
+00106      q_t *q = test_data-&gt;q1;
+00107      unsigned int loops = test_data-&gt;loops;
+00108      UINT deq_cnt = 0;
+00109      UINT empty_cnt = 0;
+00110      UINT empty_spans = 0;
+00111      UINT max_empty_span = 0;
+00112      UINT cur_span = 0;
+00113  
+00114      unsigned int msg_num = loops;
+00115      while (msg_num &gt; 0) {
+00116          void *rtn_m;
+00117          qerr_t qerr = q_deq(q, &amp;rtn_m);
+00118          if (qerr == QERR_OK) {
+00119              /* prepare for next message */
+00120              msg_num--;
+00121  
+00122              /* collect stats */
+00123              if ((unsigned int)rtn_m == loops) {  /* first message, ignore initial spins */
+00124                  /* first message, start timing */
+00125                  gettimeofday(&amp;tmp_tv, NULL);  phase1_start = 1000000llu * (UINT)tmp_tv.tv_sec + (UINT)tmp_tv.tv_usec;
+00126                  empty_cnt = 0;  cur_span = 0;  empty_spans = 0;
+00127              }
+00128              deq_cnt++;
+00129              if (cur_span &gt; max_empty_span) {
+00130                  max_empty_span = cur_span; }
+00131              cur_span = 0;
+00132          } else if (qerr == QERR_EMPTY) {
+00133              /* queue empty, collect stats */
+00134              empty_cnt++;
+00135              if (cur_span == 0) {
+00136                  empty_spans++; }
+00137              cur_span++;
+00138          } else CHK_QERR(qerr);
+00139      }  /* while */
+00140  
+00141      test_data-&gt;deq_cnt = deq_cnt;
+00142      test_data-&gt;empty_cnt = empty_cnt;
+00143      test_data-&gt;empty_spans = empty_spans;
+00144      test_data-&gt;max_empty_span = max_empty_span;
+00145  
+00146      pthread_exit(NULL);
+00147      return NULL;  /* don't need this, but keep the compiler happy */
+00148  }  /* deq_thread */
+00149  
+00150  
+00151  void *ping_thread(void *in_arg)
+00152  {
+00153      tst_t *test_data = (tst_t *)in_arg;
+00154      q_t *q1 = test_data-&gt;q1;
+00155      q_t *q2 = test_data-&gt;q2;
+00156      unsigned int loops = test_data-&gt;loops;
+00157  
+00158      unsigned int msg_num = loops;
+00159      while (msg_num &gt; 0) {
+00160          void *rtn_m;
+00161          qerr_t qerr;
+00162          do {
+00163              qerr = q_deq(q1, &amp;rtn_m);
+00164          } while (qerr == QERR_EMPTY);
+00165          CHK_QERR(qerr);
+00166  
+00167          /* prepare next message contents */
+00168          msg_num--;
+00169  
+00170          /* bounce the message back */
+00171          if (msg_num &gt; 0) {
+00172              qerr_t qerr = q_enq(q2, I2V msg_num);  CHK_QERR(qerr);
+00173              /* prepare for next message */
+00174              msg_num--;
+00175          }
+00176      }  /* while */
+00177  
+00178      gettimeofday(&amp;tmp_tv, NULL);  phase2_end = 1000000llu * (UINT)tmp_tv.tv_sec + (UINT)tmp_tv.tv_usec;
+00179  
+00180      pthread_exit(NULL);
+00181      return NULL;  /* don't need this, but keep the compiler happy */
+00182  }  /* ping_thead */
+00183  
+00184  
+00185  void *pong_thread(void *in_arg)
+00186  {
+00187      tst_t *test_data = (tst_t *)in_arg;
+00188      q_t *q1 = test_data-&gt;q1;
+00189      q_t *q2 = test_data-&gt;q2;
+00190      unsigned int loops = test_data-&gt;loops;
+00191  
+00192      gettimeofday(&amp;tmp_tv, NULL);  phase2_start = 1000000llu * (UINT)tmp_tv.tv_sec + (UINT)tmp_tv.tv_usec;
+00193  
+00194      unsigned int msg_num = loops;
+00195      msg_num--;  /* pong gets second message */
+00196      while (msg_num &gt; 0) {
+00197          void *rtn_m;
+00198          qerr_t qerr;
+00199          do {
+00200              qerr = q_deq(q2, &amp;rtn_m);
+00201          } while (qerr == QERR_EMPTY);
+00202          CHK_QERR(qerr);
+00203  
+00204          /* prepare next message contents */
+00205          msg_num--;
+00206  
+00207          /* bounce the message back */
+00208          if (msg_num &gt; 0) {
+00209              qerr_t qerr = q_enq(q1, I2V msg_num);  CHK_QERR(qerr);
+00210              /* prepare for next message */
+00211              msg_num--;
+00212          }
+00213      }  /* while */
+00214  
+00215      pthread_exit(NULL);
+00216      return NULL;  /* don't need this, but keep the compiler happy */
+00217  }  /* pong_thead */
+00218  
+00219  
+00220  /* Handle options */
+00221  struct opt_s {
+00222      int loops;  /* number of loops for streaming test */
+00223      int depth;  /* queue depth for streaming test */
+00224      int LOOPS;  /* number of loops for ping-pong test */
+00225      int DEPTH;  /* queue depth for ping-pong test */
+00226      int pings;  /* number of ping messages in flight */
+00227  };
+00228  typedef struct opt_s opt_t;
+00229  
+00230  void opts_set_def(opt_t *opts)
+00231  {
+00232      opts-&gt;loops = 500000000;
+00233      opts-&gt;depth = 4096;
+00234      opts-&gt;LOOPS = 50000000;
+00235      opts-&gt;DEPTH = 2;
+00236      opts-&gt;pings = 1;
+00237  }  /* opts_set_def */
+00238  
+00239  char usage_str[] = "Usage: q_perf [-l loops] [-d depth] [-L LOOPS] [-D DEPTH] [-p pings]\n"
+00240      "Where:\n"
+00241      "    -l loops - number of times to loop the streaming test [%ld]\n"
+00242      "    -d depth - queue depth to use for streaming test [%ld] (must be power of 2)\n"
+00243      "    -L LOOPS - number of times to loop the ping-pong test [%ld]\n"
+00244      "    -D DEPTH - queue depth to use for ping-pong test [%ld] (must be power of 2)\n"
+00245      "    -p pings - number of ping messages in flight [%ld] (must be &lt; DEPTH)\n";
+00246  
+00247  void usage(opt_t *opts, char *m)
+00248  {
+00249      opts_set_def(opts);  /* (re)set options to defaults so that we print the right values in the help */
+00250  
+00251      if (m == NULL || m[0] == '\0') {
+00252          fprintf(stderr, usage_str, opts-&gt;loops, opts-&gt;depth, opts-&gt;LOOPS, opts-&gt;DEPTH, opts-&gt;pings);
+00253          exit(0);
+00254      } else {
+00255          fprintf(stderr, "%s\n", m);
+00256          fprintf(stderr, usage_str, opts-&gt;loops, opts-&gt;depth, opts-&gt;LOOPS, opts-&gt;DEPTH, opts-&gt;pings);
+00257          exit(1);
+00258      }
+00259  }  /* usage */
+00260  
+00261  void get_options(opt_t *opts, int argc, char **argv)
+00262  {
+00263      opts_set_def(opts);  /* set options to defaults */
+00264  
+00265      int o;  char *p;
+00266      while ((o = getopt(argc, argv, "l:d:L:D:p:")) &gt; 0) {
+00267          switch (o) {
+00268          case 'l':
+00269              p = NULL;  errno = 0;
+00270              opts-&gt;loops = strtol(optarg, &amp;p, 10);
+00271              if (errno != 0 || p == optarg || p == NULL || *p != '\0')
+00272                  usage(opts, "Invalid numeric value for -l option");
+00273              break;
+00274          case 'd':
+00275              p = NULL;  errno = 0;
+00276              opts-&gt;depth = strtol(optarg, &amp;p, 10);
+00277              if (errno != 0 || p == optarg || p == NULL || *p != '\0')
+00278                  usage(opts, "Invalid numeric value for -d option");
+00279              break;
+00280          case 'L':
+00281              p = NULL;  errno = 0;
+00282              opts-&gt;LOOPS = strtol(optarg, &amp;p, 10);
+00283              if (errno != 0 || p == optarg || p == NULL || *p != '\0')
+00284                  usage(opts, "Invalid numeric value for -L option");
+00285              break;
+00286          case 'D':
+00287              p = NULL;  errno = 0;
+00288              opts-&gt;DEPTH = strtol(optarg, &amp;p, 10);
+00289              if (errno != 0 || p == optarg || p == NULL || *p != '\0')
+00290                  usage(opts, "Invalid numeric value for -D option");
+00291              break;
+00292          case 'p':
+00293              p = NULL;  errno = 0;
+00294              opts-&gt;pings = strtol(optarg, &amp;p, 10);
+00295              if (errno != 0 || p == optarg || p == NULL || *p != '\0')
+00296                  usage(opts, "Invalid numeric value for -p option");
+00297              break;
+00298          default:
+00299              usage(opts, NULL);
+00300          }  /* switch o */
+00301      }  /* while getopt */
+00302  
+00303      if (opts-&gt;pings &gt;= opts-&gt;DEPTH) { usage(opts, "ERROR pings (-p) &gt;= DEPTH (-D)\n"); }
+00304  }  /* get_options */
+00305  
+00306  
+00307  int main(int argc, char **argv)
+00308  {
+00309      opt_t opts;
+00310      qerr_t qerr;
+00311  
+00312      get_options(&amp;opts, argc, argv);
+00313  
+00314      tst_t test_data;  /* shared with test threads */
+00315      memset(&amp;test_data, 0, sizeof(test_data));
+00316  
+00317      qerr = q_create(&amp;test_data.q1, opts.depth);  CHK_QERR(qerr);
+00318      test_data.loops = opts.loops;
+00319      int perr;
+00320  
+00321      pthread_attr_t deq_attr;  pthread_attr_init(&amp;deq_attr);  pthread_attr_setdetachstate(&amp;deq_attr, PTHREAD_CREATE_JOINABLE);
+00322      pthread_t deq_t_handle;
+00323      perr = pthread_create(&amp;deq_t_handle, &amp;deq_attr, deq_thread, &amp;test_data);  CHK_PTHREAD_ERR(perr);
+00324      pthread_attr_destroy(&amp;deq_attr);
+00325  
+00326      pthread_attr_t enq_attr;  pthread_attr_init(&amp;enq_attr);  pthread_attr_setdetachstate(&amp;enq_attr, PTHREAD_CREATE_JOINABLE);
+00327      pthread_t enq_t_handle;
+00328      perr = pthread_create(&amp;enq_t_handle, &amp;enq_attr, enq_thread, &amp;test_data);  CHK_PTHREAD_ERR(perr);
+00329      pthread_attr_destroy(&amp;enq_attr);
+00330  
+00331      /* wait for threads to complete. */
+00332      perr = pthread_join(deq_t_handle, NULL);  CHK_PTHREAD_ERR(perr);  /* wait for deq first */
+00333      perr = pthread_join(enq_t_handle, NULL);  CHK_PTHREAD_ERR(perr);
+00334  
+00335      qerr = q_delete(test_data.q1);  CHK_QERR(qerr);
+00336  
+00337      printf("FYI loops=%u, full_cnt=%u, empty_cnt=%u\n", test_data.loops, test_data.full_cnt, test_data.empty_cnt);
+00338      printf("FYI     full_spans=%u, empty_spans=%u\n", test_data.full_spans, test_data.empty_spans);
+00339      printf("FYI     max_full_span=%u, max_empty_span=%u\n", test_data.max_full_span, test_data.max_empty_span);
+00340      double duration = (double)(phase1_end - phase1_start);
+00341      double usec_per = duration / (double)test_data.loops;
+00342      double stream_ns_per = usec_per*1000.0;
+00343      printf("FYI     duration=%f sec (%f ns/msg)\n", duration/1000000.0, stream_ns_per);
+00344      fflush(stdout);
+00345  
+00346  
+00347      /* Phase 2: ping-pong test */
+00348  
+00349      memset(&amp;test_data, 0, sizeof(test_data));
+00350  
+00351      qerr = q_create(&amp;test_data.q1, opts.DEPTH);  CHK_QERR(qerr);
+00352      qerr = q_create(&amp;test_data.q2, opts.DEPTH);  CHK_QERR(qerr);
+00353      test_data.loops = opts.LOOPS;
+00354  
+00355      /* put one or more messages in the queue to be bounced back and forth */
+00356      int i;
+00357      for (i = 0; i &lt; opts.pings; i++) {
+00358          qerr = q_enq(test_data.q1, I2V test_data.loops);  CHK_QERR(qerr);
+00359      }
+00360  
+00361      pthread_attr_t ping_attr;  pthread_attr_init(&amp;ping_attr);  pthread_attr_setdetachstate(&amp;ping_attr, PTHREAD_CREATE_JOINABLE);
+00362      pthread_t ping_t_handle;
+00363      perr = pthread_create(&amp;ping_t_handle, &amp;ping_attr, ping_thread, &amp;test_data);  CHK_PTHREAD_ERR(perr);
+00364      pthread_attr_destroy(&amp;ping_attr);
+00365  
+00366      pthread_attr_t pong_attr;  pthread_attr_init(&amp;pong_attr);  pthread_attr_setdetachstate(&amp;pong_attr, PTHREAD_CREATE_JOINABLE);
+00367      pthread_t pong_t_handle;
+00368      perr = pthread_create(&amp;pong_t_handle, &amp;pong_attr, pong_thread, &amp;test_data);  CHK_PTHREAD_ERR(perr);
+00369      pthread_attr_destroy(&amp;pong_attr);
+00370  
+00371      /* wait for threads to complete. */
+00372      perr = pthread_join(pong_t_handle, NULL);  CHK_PTHREAD_ERR(perr);  /* wait for pong first */
+00373      perr = pthread_join(ping_t_handle, NULL);  CHK_PTHREAD_ERR(perr);
+00374  
+00375      duration = phase2_end - phase2_start;
+00376      usec_per = duration / (double)test_data.loops;
+00377      double pp_ns_per = usec_per*1000.0;
+00378      printf("FYI ping/pong: msgs=%u, duration=%f sec (%f ns/msg one-way)\n", test_data.loops, duration/1000000.0, pp_ns_per);
+00379  
+00380      printf("FYI summary: stream: %f   pp: %f\n", stream_ns_per, pp_ns_per);
+00381      fflush(stdout);
+00382  
+00383      qerr = q_delete(test_data.q1);  CHK_QERR(qerr);
+00384      qerr = q_delete(test_data.q2);  CHK_QERR(qerr);
+00385  }  /* main */
+</pre></small></body></html>

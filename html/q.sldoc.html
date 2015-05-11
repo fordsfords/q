@@ -1,0 +1,677 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html;
+      charset=windows-1252">
+    <title>q Module Internals</title>
+  </head>
+  <body>
+    <h1><a class="mozTocH1" name="mozTocId336658"></a>q Module Internals<br>
+    </h1>
+    <p>This is a <a href="http://geeky-boy.com/semlit/">semi-literate
+        document</a> for the module <tt>q.c</tt> and it's associated
+      files.&nbsp; This module implements a fast, lock-free,
+      non-blocking queue.<br>
+    </p>
+    <p>Copyright 2014 Steven Ford <a href="http://geeky-boy.com">http://geeky-boy.com</a> and
+licensed as <b>public domain (CC0)</b>:</p>
+    <p xmlns:dct="http://purl.org/dc/terms/"
+      xmlns:vcard="http://www.w3.org/2001/vcard-rdf/3.0#"> <a
+        rel="license"
+        href="http://creativecommons.org/publicdomain/zero/1.0/"> <img
+          src="http://i.creativecommons.org/p/zero/1.0/88x31.png"
+          style="border-style: none;" alt="CC0"> </a> <br>
+      To the extent possible under law, the contributors to this project
+      have waived all copyright and related or neighboring rights to
+      this work. This work is published from: <span
+        property="vcard:Country" datatype="dct:ISO3166" content="US"
+        about="geeky-boy.com"> United States</span>.&nbsp; The project
+      home is <a href="http://geeky-boy.com/q">http://geeky-boy.com/q</a>.&nbsp;
+      To contact me, Steve Ford, project owner, you can find my email
+      address at <a href="http://geeky-boy.com">http://geeky-boy.com</a>.&nbsp;
+      Can't see it?&nbsp; Keep looking.</p>
+    <br>
+<br>
+    <ol class="readonly" id="mozToc">
+      <!--mozToc h1 1 h2 2 h3 3 h4 4 h5 5 h6 6-->
+      <li><a href="#mozTocId336658">q Module Internals </a>
+        <ol>
+          <li><a href="#mozTocId638880">Introduction</a></li>
+          <li><a href="#mozTocId641188">Q API</a></li>
+          <li><a href="#mozTocId748906">Queue Algorithm</a>
+            <ol>
+              <li><a href="#mozTocId391823">Threading Considerations</a></li>
+              <li><a href="#mozTocId63975">Alternate Algorithms</a></li>
+            </ol>
+          </li>
+          <li><a href="#mozTocId41959">Module explanation: q.c </a>
+            <ol>
+              <li><a href="#mozTocId56359">Function q_enq</a></li>
+              <li><a href="#mozTocId423705">Function: q_deq </a></li>
+              <li><a href="#mozTocId415348">Structure: q_s</a></li>
+              <li><a href="#mozTocId219381">Function: q_create</a></li>
+            </ol>
+          </li>
+          <li><a href="#mozTocId97353">Module explanation: q_selftest.c,
+              q_selftest.h </a></li>
+          <li><a href="#mozTocId449019">Module explanation: q_perf.c</a></li>
+          <li><a href="#mozTocId801555">Developers</a></li>
+        </ol>
+      </li>
+    </ol>
+    <h2><a class="mozTocH2" name="mozTocId638880"></a>Introduction</h2>
+    <p>This document describes the internals of the <tt>q.c</tt>
+      module, and is intended to be read by a programmer who wants to
+      understand, maintain or reuse the code.&nbsp; Before reading this
+      documentation, you are expected to have a good user-level
+      understanding of C and queuing in general.<br>
+    </p>
+    <p><b>Characteristics</b> of the queue implemented by <tt>q.c</tt>:<br>
+    </p>
+    <ul>
+      <li>Fixed size (size specified at queue creation time).</li>
+      <li>Non-blocking (enqueuing to a full queue returns immediately
+        with status; dequeuing from an empty queue returns immediately
+        with status).</li>
+      <li> Single Producer, Single Consumer (SPSC).<br>
+      </li>
+      <li>No dynamic memory allocates or frees during enqueue and
+        dequeue operations.&nbsp; Messages are void pointers (null
+        pointers are allowed).<br>
+      </li>
+      <li>High performance.&nbsp; On my Macbook Air, streaming data
+        through a queue averages 11 ns per message (queue size=32),
+        while ping-pong latency is 69 ns (one-way).</li>
+      <li>Tested on Mac OSX 10.9 (Mavericks) and Linux 2.6 and 3.5
+        kernels.&nbsp; At present, I only recommend the 64-bit x86
+        processor family, due to the fact that I take advantage of its
+        programmer-friendly memory model.&nbsp; In the future I hope to
+        generalize it to be efficient on other processor types.<br>
+      </li>
+    </ul>
+    <p></p>
+    <p>The module is written in standard C, and is therefore usable by
+      both C and C++ programs.<br>
+    </p>
+    <p>There are several source files:<br>
+    </p>
+    <ul>
+      <li><b><span style="font-family: monospace;"><a href="q_c.txt">q_c.txt</a></span></b>
+        - (right-click and save as "<tt>q.c</tt>") code for the q
+        module.</li>
+      <li><b><span style="font-family: monospace;"><a href="q_h.txt">q_h.txt</a></span></b>
+        - (right-click and save as "<tt>q.h</tt>") header file for q
+        module.</li>
+      <li><b><span style="font-family: monospace;"><a href="q_selftest_c.txt">q_selftest_c.txt</a></span></b>
+        - (right-click and save as "<tt>q_selftest.c</tt>") unit test
+        code.</li>
+      <li><b><span style="font-family: monospace;"><a href="q_selftest_h.txt">q_selftest_h.txt</a></span></b>
+        - (right-click and save as "<tt>q_selftest.h</tt>") header for
+        unit test.</li>
+      <li><b><span style="font-family: monospace;"><a href="q_perf_c.txt">q_perf_c.txt</a></span></b>
+        - (right-click and save as "<tt>q_perf.c</tt>") performance
+        measurement tool.</li>
+    </ul>
+    So, what are the "<tt>.sldoc</tt>" and "<tt>.slsrc</tt>" files in
+    the doc directory?&nbsp; Short answer: you can ignore them <i>if
+      you are a user</i> of the q module.&nbsp; Longer answer for <i>maintainers</i>
+    of q: see section <a href="#mozTocId801555">Developers</a>.<br>
+    <br>
+    <h2><a class="mozTocH2" name="mozTocId641188"></a>Q API</h2>
+    The API is documented in <tt>q.h</tt>: <a name="apis_ref_1" id="apis_ref_1"></a>
+<small><pre>
+<a href="q_h.slsrc.html#apis" target="src">00017</a>  /* Most q APIs return "qerr_t".  These definitions must
+<a href="q_h.slsrc.html#apis" target="src">00018</a>   * be kept in sync with the "qerrs" string array in "q.c". */
+<a href="q_h.slsrc.html#apis" target="src">00019</a>  #define QERR_OK 0         /* Success */
+<a href="q_h.slsrc.html#apis" target="src">00020</a>  #define QERR_BUG1 1       /* Internal software bug - should never happen */
+<a href="q_h.slsrc.html#apis" target="src">00021</a>  #define QERR_BUG2 2       /* Internal software bug - should never happen */
+<a href="q_h.slsrc.html#apis" target="src">00022</a>  #define QERR_BADSIZE 3    /* q_size parameter invalid */
+<a href="q_h.slsrc.html#apis" target="src">00023</a>  #define QERR_MALLOC 4     /* No memory available */
+<a href="q_h.slsrc.html#apis" target="src">00024</a>  #define QERR_FULL 5       /* No room in queue */
+<a href="q_h.slsrc.html#apis" target="src">00025</a>  #define QERR_EMPTY 6      /* No messages in queue */
+<a href="q_h.slsrc.html#apis" target="src">00026</a>  #define QERR_ERRNO 7      /* Library error (call errno for error code) */
+<a href="q_h.slsrc.html#apis" target="src">00027</a>  #define QERR_TIMEOUT 8    /* User-supplied timeout exceeded */
+<a href="q_h.slsrc.html#apis" target="src">00028</a>  #define LAST_QERR 8   /* Set to value of last "QERR_*" definition */
+<a href="q_h.slsrc.html#apis" target="src">00029</a>  
+<a href="q_h.slsrc.html#apis" target="src">00030</a>  qerr_t q_create(q_t **rtn_q, unsigned int q_size);
+<a href="q_h.slsrc.html#apis" target="src">00031</a>  /* Create an instance of a queue.
+<a href="q_h.slsrc.html#apis" target="src">00032</a>   * rtn_q  : Pointer to caller's queue instance handle.
+<a href="q_h.slsrc.html#apis" target="src">00033</a>   * q_size : Number of queue elements to allocate.  Must be &gt; 1 and a power
+<a href="q_h.slsrc.html#apis" target="src">00034</a>   *          of 2.  Due to the nature of the algorithm used, a maximum of
+<a href="q_h.slsrc.html#apis" target="src">00035</a>   *          q_size - 1 elements can actually be stored in the queue.
+<a href="q_h.slsrc.html#apis" target="src">00036</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
+<a href="q_h.slsrc.html#apis" target="src">00037</a>  
+<a href="q_h.slsrc.html#apis" target="src">00038</a>  qerr_t q_delete(q_t *q);
+<a href="q_h.slsrc.html#apis" target="src">00039</a>  /* Delete an instance of a queue.
+<a href="q_h.slsrc.html#apis" target="src">00040</a>   * q : Queue instance handle.
+<a href="q_h.slsrc.html#apis" target="src">00041</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
+<a href="q_h.slsrc.html#apis" target="src">00042</a>  
+<a href="q_h.slsrc.html#apis" target="src">00043</a>  qerr_t q_enq( q_t *q, void *m);
+<a href="q_h.slsrc.html#apis" target="src">00044</a>  /* Add a message to the queue.
+<a href="q_h.slsrc.html#apis" target="src">00045</a>   * q : Queue instance handle.
+<a href="q_h.slsrc.html#apis" target="src">00046</a>   * m : Message to enqueue.
+<a href="q_h.slsrc.html#apis" target="src">00047</a>   * Returns QERR_OK on success, QERR_FULL if queue full, or other QERR_* value on error. */
+<a href="q_h.slsrc.html#apis" target="src">00048</a>  
+<a href="q_h.slsrc.html#apis" target="src">00049</a>  qerr_t q_deq(q_t *q, void **rtn_m);
+<a href="q_h.slsrc.html#apis" target="src">00050</a>  /* Remove a message from the queue.
+<a href="q_h.slsrc.html#apis" target="src">00051</a>   * q     : Queue instance handle.
+<a href="q_h.slsrc.html#apis" target="src">00052</a>   * rtn_m : Pointer to caller's message handle.
+<a href="q_h.slsrc.html#apis" target="src">00053</a>   * Returns QERR_OK on success, QERR_EMPTY if queue empty, or other QERR_* value on error. */
+<a href="q_h.slsrc.html#apis" target="src">00054</a>  
+<a href="q_h.slsrc.html#apis" target="src">00055</a>  int q_is_empty(q_t *q);
+<a href="q_h.slsrc.html#apis" target="src">00056</a>  /* Returns 1 if queue is empty (contains no messages), 0 otherwise.
+<a href="q_h.slsrc.html#apis" target="src">00057</a>   * q : Queue instance handle. */
+<a href="q_h.slsrc.html#apis" target="src">00058</a>  
+<a href="q_h.slsrc.html#apis" target="src">00059</a>  int q_is_full(q_t *q);
+<a href="q_h.slsrc.html#apis" target="src">00060</a>  /* Returns 1 if queue is full (contains q_size-1 message), 0 otherwise.
+<a href="q_h.slsrc.html#apis" target="src">00061</a>   * q : Queue instance handle. */
+<a href="q_h.slsrc.html#apis" target="src">00062</a>  
+<a href="q_h.slsrc.html#apis" target="src">00063</a>  qerr_t q_blk_enq( q_t *q, void *m, int timeout);
+<a href="q_h.slsrc.html#apis" target="src">00064</a>  /* Add a message to the queue.
+<a href="q_h.slsrc.html#apis" target="src">00065</a>   * q : Queue instance handle.
+<a href="q_h.slsrc.html#apis" target="src">00066</a>   * m : Message to enqueue.
+<a href="q_h.slsrc.html#apis" target="src">00067</a>   * Returns QERR_OK on success, QERR_FULL if queue full, or other QERR_* value on error. */
+<a href="q_h.slsrc.html#apis" target="src">00068</a>  
+<a href="q_h.slsrc.html#apis" target="src">00069</a>  char *q_qerr_str(qerr_t qerr);
+<a href="q_h.slsrc.html#apis" target="src">00070</a>  /* Returns a string representation of a queue API return error code.
+<a href="q_h.slsrc.html#apis" target="src">00071</a>   * qerr : value returned by most q APIs indicating success or faiure.
+<a href="q_h.slsrc.html#apis" target="src">00072</a>   * (See q.h for list of QERR_* definitions.) */
+</pre><!-- endblock apis_ref_1 --></small>
+
+
+    <h2><a class="mozTocH2" name="mozTocId748906"></a>Queue Algorithm</h2>
+    Although the code contained herein was written from scratch by Steve
+    Ford in 2014, the algorithm was influenced by John D. Valois' 1994
+    paper, "<a
+href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implementing_lock_free.pdf"><i>Implementing
+
+
+
+
+
+        Lock-Free Queues</i></a>"&nbsp; (Valois, J.: Implementing
+    lock-free queues. In: Proceedings of the Seventh<br>
+    International Conference on Parallel and Distributed Computing
+    Systems. (1994) 64–69)<br>
+    <br>
+    This queue implementation is based on an array of N elements (where
+    N must be a power of 2).&nbsp; There is a queue head that points to
+    the oldest message (which will be dequeued next), and a queue tail,
+    which points to an empty element where the next enqueue will go.<br>
+    <br>
+    At initialization, the queue looks like this:<br>
+    <br>
+    <img alt="empty queue with head and tail pointing to msgs[0]"
+      src="q_pics1.png" height="173" width="374"><br>
+    <br>
+    All empty elements MUST be set to unused, and the element pointed to
+    by tail must ALWAYS be empty.&nbsp; The slot pointed to by head is
+    unused ONLY when the queue is empty.&nbsp; The algorithm MUST
+    guarantee that an empty queue always has the head and tail pointing
+    to the same element, and that element (actually all elements) set to
+    unused.<br>
+    <br>
+    After a message m1 is enqueued, the queue looks like this:<br>
+    <br>
+    <img alt="tail now points at msgs[1]" src="q_pics2.png" height="174"
+      width="305"><br>
+    <br>
+    Message m1 was written to the tail, and the tail was incremented.<br>
+    <br>
+    Now enqueue m2 and m3:<br>
+    <br>
+    <img alt="two more enqueues, queue is full" src="q_pics3.png"
+      height="173" width="360"><br>
+    <br>
+    This queue algorithm defines full to be when there is exactly one
+    empty element.&nbsp; Thus, in an N-element array, you can only store
+    N-1 messages.&nbsp; Since tail must point to an empty element, the
+    queue can be detected as being full when the element *after* the
+    tail is used.&nbsp; In this case, the next element after tail is
+    msgs[0], which still contains message m1.<br>
+    <br>
+    Now let's dequeue a message:<br>
+    <br>
+    <img alt="dequeue m1, head points at msgs[1]" src="q_pics4.png"
+      height="174" width="305"><br>
+    <br>
+    When message m1 is dequeued, its array element MUST be set to
+    unused.&nbsp; Then head is incremented.<br>
+    <br>
+    Note that this algorithm does not have a straight-forward method of
+    calculating the queue length (i.e. the number of messages currently
+    in the queue).&nbsp; You might be tempted to subtract the head from
+    the tail, but it gets complicated when tail wraps and head has
+    not.&nbsp; Even if you handle that properly, threading issues makes
+    it dangerous to access both variables.&nbsp; It is much better to
+    simply provide "is_full" and "is_empty" functions, which are
+    typically what applications really want to know when they ask for
+    the queue length.<br>
+    <br>
+    <h3><a class="mozTocH3" name="mozTocId391823"></a>Threading
+      Considerations</h3>
+    To make a high-performing lockless queue, it is important to
+    minimize the memory which is shared between the threads.&nbsp; This
+    queue is designed for single-producer, single-consumer.&nbsp; So you
+    only have two threads to consider.<br>
+    <br>
+    The way the algorithm is designed, the enqueue thread accesses the
+    tail pointer, NEVER the head.&nbsp; The dequeue thread accesses the
+    head pointer, NEVER the tail.&nbsp; By making sure head and tail are
+    on different cache lines, there is no memory contention for the head
+    and tail pointers.&nbsp; The <tt>msgs</tt> array is the obvious
+    point of sharing, so it is declared volatile.<br>
+    <br>
+    (Aside: there is debate whether volatile should ever be used.&nbsp;
+    Many programmers prefer to use compiler barriers, as their semantics
+    are more-exactly defined.&nbsp; Unfortunately, there isn't an
+    efficient and portable way to code a compiler barrier.&nbsp; And
+    while there are some ambiguities on the exact semantics of volatile,
+    for the purposes of this q module, those ambiguities don't
+    matter.&nbsp; My empirical measurements indicate that this algorithm
+    performs about the same, regardless whether volatile or compiler
+    barriers are used.&nbsp; One disadvantage of compiler barriers is
+    that you must place them very carefully, which leaves opportunity
+    for error.&nbsp; Also, a compiler barrier prevents reordering and
+    optimization of ALL variables, both shared and private.&nbsp;
+    Volatile limits its effect to only those variables that it is
+    applied to, and extends those effects to every access to those
+    variables.&nbsp; I use volatile for this algorithm.)<br>
+    <br>
+    (Another aside: the compiler barrier v.s. volatile debate is
+    sometimes confused with hardware memory barriers.&nbsp; They are two
+    different issues which must be treated differently.&nbsp; Compiler
+    barriers and volatile variables control the order and optimization
+    of the assembly language instructions which the compiler
+    generates.&nbsp; Hardware memory barriers controls how the CPU and
+    cache hardware is allowed to reorder physical memory accesses
+    differently from the order of the assembly language instructions.)<br>
+    <br>
+    Another threading consideration is the number of shared variables
+    which must be manipulated to operate on the queue.&nbsp; Each check
+    of fullness and emptiness requires only a single read.&nbsp; The
+    enqueue function looks at the element *after* the tail to determine
+    if the queue is full.&nbsp; The dequeue function looks at the head
+    element to determine if the queue is empty (head element unused).<br>
+    <br>
+    <h3><a class="mozTocH3" name="mozTocId63975"></a>Alternate
+      Algorithms</h3>
+    Under the directory "<tt>alternatives</tt>" are a series of
+    alternative implementations: <tt>q1.c</tt> to <tt>q5.c</tt>.&nbsp;
+    Three of the five produce longer timings for both streaming and
+    ping-pong.&nbsp; Two of the, <tt>q2.c</tt> and <tt>q4.c</tt>,
+    produce slightly better times for streaming, but worse times for
+    ping-pong.&nbsp; I am sticking with q.c because I would expect
+    queues to tend to be empty most of the time.<br>
+    <br>
+    <ul>
+    </ul>
+    <p> </p>
+    <h2><a class="mozTocH2" name="mozTocId41959"></a>Module explanation:
+      <tt>q.c</tt><br>
+    </h2>
+    The enqueue and dequeue functions are the heart of the lockless
+    algorithm.&nbsp; In the code fragments below, <b>click on a line
+      number to display the same code in-context on the right-side of
+      the screen</b>.<br>
+    <br>
+    <h3><a class="mozTocH3" name="mozTocId56359"></a>Function q_enq</h3>
+    To enqueue a message: <a name="enqueue_ref_1" id="enqueue_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#enqueue" target="src">00142</a>  qerr_t q_enq(q_t *q, void *m)
+<a href="q_c.slsrc.html#enqueue" target="src">00143</a>  {
+<a href="q_c.slsrc.html#enqueue" target="src">00144</a>      unsigned int tail = (unsigned)(q-&gt;enq_cnt &amp; q-&gt;size_mask);
+<a href="q_c.slsrc.html#enqueue" target="src">00145</a>  
+<a href="q_c.slsrc.html#enqueue" target="src">00146</a>      /* Queue must always have at least one empty slot.  Make sure that
+<a href="q_c.slsrc.html#enqueue" target="src">00147</a>       * after the current tail is filled, the next slot will be empty. */
+<a href="q_c.slsrc.html#enqueue" target="src">00148</a>      unsigned int next_tail = (tail + 1) &amp; q-&gt;size_mask;
+<a href="q_c.slsrc.html#enqueue" target="src">00149</a>      if (q-&gt;msgs[next_tail].in_use) { return QERR_FULL; }  /* Queue is full, item not added */
+<a href="q_c.slsrc.html#enqueue" target="src">00150</a>  
+<a href="q_c.slsrc.html#enqueue" target="src">00151</a>      q-&gt;msgs[tail].d = (void * volatile)m;
+<a href="q_c.slsrc.html#enqueue" target="src">00152</a>      q-&gt;msgs[tail].in_use = 1;
+<a href="q_c.slsrc.html#enqueue" target="src">00153</a>      q-&gt;enq_cnt++;
+<a href="q_c.slsrc.html#enqueue" target="src">00154</a>      return QERR_OK;
+<a href="q_c.slsrc.html#enqueue" target="src">00155</a>  }  /* q_enq */
+</pre><!-- endblock enqueue_ref_1 --></small>
+
+ The tail pointer is
+    defined as the number of enqueues mod the number of elements in the
+    <tt>msgs</tt> array.&nbsp; By constraining the array size to a power
+    of two, the tail can be quickly calculated as the number of enqueues
+    bit-wise ANDed with the the number of array elements minus 1:
+    <a name="tailcalc_ref_1" id="tailcalc_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#tailcalc" target="src">00144</a>      unsigned int tail = (unsigned)(q-&gt;enq_cnt &amp; q-&gt;size_mask);
+</pre><!-- endblock tailcalc_ref_1 --></small>
+
+<br>
+    <h3><a class="mozTocH3" name="mozTocId423705"></a>Function: q_deq<br>
+    </h3>
+    To dequeue a message: <a name="dequeue_ref_1" id="dequeue_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#dequeue" target="src">00159</a>  qerr_t q_deq(q_t *q, void **rtn_m)
+<a href="q_c.slsrc.html#dequeue" target="src">00160</a>  {
+<a href="q_c.slsrc.html#dequeue" target="src">00161</a>      unsigned int head = (unsigned)(q-&gt;deq_cnt &amp; q-&gt;size_mask);
+<a href="q_c.slsrc.html#dequeue" target="src">00162</a>      if (! q-&gt;msgs[head].in_use) { return QERR_EMPTY; }
+<a href="q_c.slsrc.html#dequeue" target="src">00163</a>  
+<a href="q_c.slsrc.html#dequeue" target="src">00164</a>      *rtn_m = (void *)q-&gt;msgs[head].d;
+<a href="q_c.slsrc.html#dequeue" target="src">00165</a>      q-&gt;msgs[head].in_use = 0;  /* mark it as empty */
+<a href="q_c.slsrc.html#dequeue" target="src">00166</a>      q-&gt;deq_cnt++;
+<a href="q_c.slsrc.html#dequeue" target="src">00167</a>      return QERR_OK;
+<a href="q_c.slsrc.html#dequeue" target="src">00168</a>  }  /* q_deq */
+</pre><!-- endblock dequeue_ref_1 --></small>
+
+ The head pointer is
+    defined as the number of dequeues mod the number of elements in the
+    <tt> msgs</tt> array.&nbsp; As with <tt>q_enq</tt>, a simple
+    bit-wise AND can be used: <a name="headcalc_ref_1" id="headcalc_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#headcalc" target="src">00161</a>      unsigned int head = (unsigned)(q-&gt;deq_cnt &amp; q-&gt;size_mask);
+</pre><!-- endblock headcalc_ref_1 --></small>
+
+<br>
+    <h3><a class="mozTocH3" name="mozTocId415348"></a>Structure: q_s</h3>
+    Now let's take a look at the queue data structure:
+    <a name="q_s_ref_1" id="q_s_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#q_s" target="src">00049</a>  /* message element */
+<a href="q_c.slsrc.html#q_s" target="src">00050</a>  struct q_msg_s {
+<a href="q_c.slsrc.html#q_s" target="src">00051</a>      void *d;
+<a href="q_c.slsrc.html#q_s" target="src">00052</a>      int in_use;
+<a href="q_c.slsrc.html#q_s" target="src">00053</a>  };
+<a href="q_c.slsrc.html#q_s" target="src">00054</a>  typedef struct q_msg_s q_msg_t;
+<a href="q_c.slsrc.html#q_s" target="src">00055</a>  
+<a href="q_c.slsrc.html#q_s" target="src">00056</a>  /* q.h contains an empty forward definition of "q_s", and defines "q_t" */
+<a href="q_c.slsrc.html#q_s" target="src">00057</a>  struct q_s {
+<a href="q_c.slsrc.html#q_s" target="src">00058</a>      unsigned int enq_cnt;     /* count of successful messages enqueued (tail pointer) */
+<a href="q_c.slsrc.html#q_s" target="src">00059</a>      char enq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
+<a href="q_c.slsrc.html#q_s" target="src">00060</a>  
+<a href="q_c.slsrc.html#q_s" target="src">00061</a>      unsigned int deq_cnt;     /* count of successful messages dequeued (head pointer) */
+<a href="q_c.slsrc.html#q_s" target="src">00062</a>      char deq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
+<a href="q_c.slsrc.html#q_s" target="src">00063</a>  
+<a href="q_c.slsrc.html#q_s" target="src">00064</a>      q_msg_t * volatile msgs;  /* Array of "q_size" elements */
+<a href="q_c.slsrc.html#q_s" target="src">00065</a>      unsigned int size_mask;  /* Number of msgs elements minus 1 */
+<a href="q_c.slsrc.html#q_s" target="src">00066</a>      /* make total size a multiple of cache line size, to prevent interference with whatever comes after */
+<a href="q_c.slsrc.html#q_s" target="src">00067</a>      char final_pad[CACHE_LINE_SIZE - ( sizeof(unsigned int) + sizeof(void **) )];
+<a href="q_c.slsrc.html#q_s" target="src">00068</a>  };  /* struct q_s */
+</pre><!-- endblock q_s_ref_1 --></small>
+
+ Note that this structure is private to <tt> q.c</tt>.&nbsp;
+
+
+
+
+
+
+
+
+
+    The API sees an empty forward reference and type in <tt>q.h</tt>:
+    <a name="q_t_ref_1" id="q_t_ref_1"></a>
+<small><pre>
+<a href="q_h.slsrc.html#q_t" target="src">00014</a>  struct q_s;                       /* forward (opaque) definition */
+<a href="q_h.slsrc.html#q_t" target="src">00015</a>  typedef struct q_s q_t;           /* object type of queue instance */
+</pre><!-- endblock q_t_ref_1 --></small>
+
+<br>
+    <br>
+    To improve threading efficiency, the variables used by the enqueue
+    and dequeue threads are separated and placed on independent <a
+      href="https://en.wikipedia.org/wiki/Cache_line#Cache_entries">cache
+
+
+
+
+
+
+
+
+
+
+
+      lines</a>.&nbsp; Cache lines are typically 64 bytes long, but I
+    allocated 128 to be safe.&nbsp; (This is defined in the build script
+    <tt>bld.sh</tt>.)&nbsp; This is used to include enough padding bytes
+    to align to cache lines: <a name="pad_ref_1" id="pad_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#pad" target="src">00059</a>      char enq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
+</pre><!-- endblock pad_ref_1 --></small>
+
+ Note that it is
+    important to keep the number and types of variables in a cache line
+    synchronized with the padding calculation.&nbsp; This is a
+    maintenance burden, but does reap performance benefits.<br>
+    <br>
+    <h3><a class="mozTocH3" name="mozTocId219381"></a>Function: q_create</h3>
+    The <tt>q_create()</tt> function is pretty straight-forward, but
+    there are a few little gems.<br>
+    <br>
+    To assist in debugging, a set of strings are defined corresponding
+    to the return status error codes (those strings available via the <tt>q_qerr_str()</tt>
+    function).&nbsp; The manifest constants are defined in <tt>q.h</tt>:
+    <a name="qerr_defs_ref_1" id="qerr_defs_ref_1"></a>
+<small><pre>
+<a href="q_h.slsrc.html#qerr_defs" target="src">00017</a>  /* Most q APIs return "qerr_t".  These definitions must
+<a href="q_h.slsrc.html#qerr_defs" target="src">00018</a>   * be kept in sync with the "qerrs" string array in "q.c". */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00019</a>  #define QERR_OK 0         /* Success */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00020</a>  #define QERR_BUG1 1       /* Internal software bug - should never happen */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00021</a>  #define QERR_BUG2 2       /* Internal software bug - should never happen */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00022</a>  #define QERR_BADSIZE 3    /* q_size parameter invalid */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00023</a>  #define QERR_MALLOC 4     /* No memory available */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00024</a>  #define QERR_FULL 5       /* No room in queue */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00025</a>  #define QERR_EMPTY 6      /* No messages in queue */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00026</a>  #define QERR_ERRNO 7      /* Library error (call errno for error code) */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00027</a>  #define QERR_TIMEOUT 8    /* User-supplied timeout exceeded */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00028</a>  #define LAST_QERR 8   /* Set to value of last "QERR_*" definition */
+</pre><!-- endblock qerr_defs_ref_1 --></small>
+
+ The strings are defined in <tt>q.c</tt>:
+    <a name="qerr_strs_ref_1" id="qerr_strs_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#qerr_strs" target="src">00031</a>  /* This list of strings must be kept in sync with the
+<a href="q_c.slsrc.html#qerr_strs" target="src">00032</a>   * corresponding "QERR_*" constant definitions in "q.h".
+<a href="q_c.slsrc.html#qerr_strs" target="src">00033</a>   * It is used by the q_qerr_str() function. */
+<a href="q_c.slsrc.html#qerr_strs" target="src">00034</a>  static char *qerrs[] = {
+<a href="q_c.slsrc.html#qerr_strs" target="src">00035</a>      "QERR_OK",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00036</a>      "QERR_BUG1",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00037</a>      "QERR_BUG2",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00038</a>      "QERR_BADSIZE",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00039</a>      "QERR_MALLOC",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00040</a>      "QERR_FULL",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00041</a>      "QERR_EMPTY",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00042</a>      "QERR_TIMEDOUT",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00043</a>      "QERR_ERRNO",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00044</a>      "QERR_BSEM",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00045</a>      "BAD_QERR", NULL};
+<a href="q_c.slsrc.html#qerr_strs" target="src">00046</a>  #define BAD_QERR (sizeof(qerrs)/sizeof(qerrs[0]) - 2)
+</pre><!-- endblock qerr_strs_ref_1 --></small>
+
+ When a maintainer is modifying the q
+    module, care must be taken when adding or changing the return status
+    error codes to keep the two synchronized.&nbsp; To aid in detecting
+    mistakes, <tt>q_create()</tt> does a sanity check:
+    <a name="qerr_chk_ref_1" id="qerr_chk_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#qerr_chk" target="src">00091</a>      /* Sanity check the error code definitions and strings */
+<a href="q_c.slsrc.html#qerr_chk" target="src">00092</a>      if (LAST_QERR != BAD_QERR - 1) { return QERR_BUG1; }  /* the QERR_* are out of sync with qerrs[] */
+</pre><!-- endblock qerr_chk_ref_1 --></small>
+
+ The unit test code in <tt>q_selftest.c</tt>
+    also does some sanity checking: <a name="qerr_utst_ref_1" id="qerr_utst_ref_1"></a>
+<small><pre>
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00306</a>      if (strcmp(q_qerr_str(QERR_OK), "QERR_OK") != 0) { ERR("q_qerr_str OK"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00307</a>      if (strcmp(q_qerr_str(QERR_BUG1), "QERR_BUG1") != 0) { ERR("q_qerr_str BUG1"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00308</a>      if (strcmp(q_qerr_str(QERR_BUG2), "QERR_BUG2") != 0) { ERR("q_qerr_str BUG2"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00309</a>      if (strcmp(q_qerr_str(QERR_BADSIZE), "QERR_BADSIZE") != 0) { ERR("q_qerr_str BADSIZE"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00310</a>      if (strcmp(q_qerr_str(QERR_MALLOC), "QERR_MALLOC") != 0) { ERR("q_qerr_str MALLOC"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00311</a>      if (strcmp(q_qerr_str(QERR_FULL), "QERR_FULL") != 0) { ERR("q_qerr_str FULL"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00312</a>      if (strcmp(q_qerr_str(QERR_EMPTY), "QERR_EMPTY") != 0) { ERR("q_qerr_str EMPTY"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00313</a>      if (strcmp(q_qerr_str(LAST_QERR), "QERR_EMPTY") != 0) { ERR("q_qerr_str LAST_QERR"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00314</a>      if (strcmp(q_qerr_str(LAST_QERR+1), "BAD_QERR") != 0) { ERR("q_qerr_str BAD_QERR"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00315</a>      if (strcmp(q_qerr_str(-1), "BAD_QERR") != 0) { ERR("q_qerr_str -1"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00316</a>      printf("FYI %s[%d]: q_qerr_str OK\n", __FILE__, __LINE__);
+</pre><!-- endblock qerr_utst_ref_1 --></small>
+
+<br>
+    <br>
+    Another debugging aid is the fact that an <i>extra</i> element is
+    allocated for the <tt>msgs</tt> array: <a name="alloc_msgs_ref_1" id="alloc_msgs_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#alloc_msgs" target="src">00103</a>      /* Allocate message storage array (one extra unused element for fence) */
+<a href="q_c.slsrc.html#alloc_msgs" target="src">00104</a>      q-&gt;msgs = NULL;
+<a href="q_c.slsrc.html#alloc_msgs" target="src">00105</a>      perr = posix_memalign((void **)&amp;q-&gt;msgs, CACHE_LINE_SIZE, (q_size + 1) * sizeof(q-&gt;msgs[0]) );
+</pre><!-- endblock alloc_msgs_ref_1 --></small>
+
+ A
+    bit later, the ex extra element is set to <tt>Q_FENCE</tt>:
+    <a name="fence_set_ref_1" id="fence_set_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#fence_set" target="src">00108</a>      q-&gt;msgs[q_size].d = (void *)Q_FENCE;  /* used by unit tests to insure no overflow */
+</pre><!-- endblock fence_set_ref_1 --></small>
+
+ <tt>Q_FENCE</tt> is a manifest constant
+    random number (generated at <a href="http://random.org/">random.org</a>):
+
+
+
+
+
+
+
+
+
+
+    <a name="fence_def_ref_1" id="fence_def_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#fence_def" target="src">00029</a>  #define Q_FENCE 0x7d831f20   /* used for testing (random number generated at random.org) */
+</pre><!-- endblock fence_def_ref_1 --></small>
+
+&nbsp; This element and value are only used
+    to sanity check the queue by detecting queue overrun (which the
+    algorithm should never allow).&nbsp; This is done in <tt>q_delete()</tt>:
+    <a name="fence_chk_ref_1" id="fence_chk_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#fence_chk" target="src">00131</a>      if (q-&gt;msgs[q-&gt;size_mask + 1].d != (void *)Q_FENCE) { return QERR_BUG1; }
+</pre><!-- endblock fence_chk_ref_1 --></small>
+
+<br>
+    <h2><a class="mozTocH2" name="mozTocId97353"></a>Module explanation:
+      q_selftest.c, q_selftest.h<br>
+    </h2>
+    The files <tt>q_selftest.h</tt> and <tt>q_selftest.c</tt> are
+    conditionally included by <tt>q.c</tt>:
+    <a name="inc_selftest_h_ref_1" id="inc_selftest_h_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#inc_selftest_h" target="src">00021</a>  /* If built with "-DSELFTEST" then include extras for unit testing. */
+<a href="q_c.slsrc.html#inc_selftest_h" target="src">00022</a>  #ifdef SELFTEST
+<a href="q_c.slsrc.html#inc_selftest_h" target="src">00023</a>  #  include "q_selftest.h"
+<a href="q_c.slsrc.html#inc_selftest_h" target="src">00024</a>  #endif
+</pre><!-- endblock inc_selftest_h_ref_1 --></small>
+
+ ... <a name="inc_selftest_c_ref_1" id="inc_selftest_c_ref_1"></a>
+<small><pre>
+<a href="q_c.slsrc.html#inc_selftest_c" target="src">00213</a>  /* If built with "-DSELFTEST" then include main() for unit testing. */
+<a href="q_c.slsrc.html#inc_selftest_c" target="src">00214</a>  #ifdef SELFTEST
+<a href="q_c.slsrc.html#inc_selftest_c" target="src">00215</a>  #include "q_selftest.c"
+<a href="q_c.slsrc.html#inc_selftest_c" target="src">00216</a>  #endif
+</pre><!-- endblock inc_selftest_c_ref_1 --></small>
+
+
+    They are for unit testing, and are compiled with <tt>q.c</tt> so
+    that they can have access to internal definitions for white box
+    testing.&nbsp; The build script <tt>bld.sh</tt> does a special unit
+    test build with "<tt>-DSELFTEST</tt>" to enable the inclusion.<br>
+    <br>
+    It is important to understand that since the queue module
+    implementation code is in the same compilation unit as the unit test
+    code, the optimizer in-lines many of the functions, and performs
+    significant compile-time optimizations as a result.&nbsp; Thus, the
+    performance numbers printed by the unit test code are not
+    representative of what an external module would see.<br>
+    <br>
+    One reason for doing the unit tests in the same compilation unit as
+    the module is that certain subtle bugs can be found that way.&nbsp;
+    For example, if you remove "<tt>volatile</tt>" from the declaration
+    of <tt>q_t.msgs</tt>, the functions will appear to work most of the
+    time.&nbsp; But the <tt>q_selftest.c</tt> function <tt>deq_thread()</tt>
+    will end up in an infinite loop.&nbsp; This is because <tt>q_deq()</tt>
+    checks the contents of <tt>msgs[0].in_use</tt> and finds it unused
+    and returns <tt>QERR_EMPTY</tt>.&nbsp; Then <tt>deq_thread()</tt>
+    ends up looping back and calling <tt>q_deq()</tt> again.&nbsp; But
+    since the function is in-lined, the compiler notices that none of
+    the relevant variables are modified in the empty code path, so it
+    optimizes the function out completely.<br>
+    <br>
+    <h2><a class="mozTocH2" name="mozTocId449019"></a>Module
+      explanation: q_perf.c</h2>
+    The <tt>q_perf.c</tt> module consists of the same streaming and
+    ping-pong performance tests as in <tt>q_selftest.c</tt>, minus the
+    sanity checking.&nbsp; However, since the <tt>q_perf.c</tt> is
+    built as a separate compilation unit, it calls the functions rather
+    than allowing them to be in-lined.&nbsp; Thus, the performance
+    measurements are more representative.<br>
+    <br>
+    The streaming test tends to measure performance where the queue is
+    usually non-empty, and is frequently full, whereas the ping-pong
+    test has the queues almost-always empty.&nbsp; Even though the
+    streaming numbers are more-impressive looking, I suspect that in
+    most use cases, the queue will spend more time empty than non-empty,
+    leading me to choose the current queue implementation (which is the
+    fastest ping-pong of the algorithms I've tested).<br>
+    <br>
+    <h2><a class="mozTocH2" name="mozTocId801555"></a>Developers</h2>
+    The web-based software documentation you are looking at is called
+    "SemiLiterate Documentation".&nbsp; The system which generates the
+    doc is called "semlit", and is freely available at <a
+      href="http://geeky-boy.com/semlit">http://geeky-boy.com/semlit</a>.<br>
+    <br>
+    If you are a user of the q module, you probably don't care about any
+    of this and you can probably ignore it.&nbsp; However, if you are a
+    maintainer, then you will want to be able to update and re-generate
+    the doc.<br>
+    <br>
+    One very important fact: <b>DON'T DIRECTLY MODIFY THE *.c AND *.h
+      FILES!</b>&nbsp; Those files are automatically generated from
+    corresponding <tt>doc/*_c.slsrc</tt> and <tt>doc/*_h.slsrc</tt>
+    files.&nbsp; To update the q module's code, you should modify the <tt>*.slsrc</tt>
+    files, and then <i>generate</i> the <tt>.c</tt> and <tt>.h</tt>
+    files by running <tt>bld.sh</tt>.<br>
+    <br>
+    So, first thing to do is download and install <a
+      href="http://geeky-boy.com/semlit">semlit</a>.&nbsp; Make sure
+    that semlit.sh is in your <tt>PATH</tt> (otherwise the q module's "<tt>bld.sh</tt>"
+    will skip the semlit stuff).&nbsp; Then use an html editor (like <a
+      href="http://www.seamonkey-project.org/releases/seamonkey2.13/">SeaMonkey</a>)
+    to modify <tt>doc/*.sldoc</tt> files, and a code editor (like <a
+      href="http://www.vim.org">vim</a>) to modify <tt>doc/*.slsrc</tt>
+    files.&nbsp; Finally, run <tt>bld.sh</tt> to generate the files.<br>
+    <br>
+    The scripts used by developers are:<br>
+    <ul>
+      <li><tt>bld.sh</tt> - build the package.</li>
+      <li><tt>bld_semlit.sh</tt> - build the semi-literate documentation
+        package (optional).</li>
+      <li><tt>clean.sh</tt> - remove temporary files.</li>
+      <li><tt>tst.sh</tt> - run the unit tests.</li>
+      <li><tt>tar.sh</tt> - create tarball.&nbsp; Uses "<tt>00VERSION.TXT</tt>"
+        to set the version number.</li>
+      <li><tt>publish.sh</tt> - transfer to geeky-boy.com account.&nbsp;
+        Uses "<tt>00VERSION.TXT</tt>" to set the version number.<br>
+      </li>
+    </ul>
+    <p>When the package version number needs to be bumped:<br>
+    </p>
+    <ul>
+      <li>Update the "00VERSION.txt" file.&nbsp; This file is used by
+        the scripts to properly name everything.</li>
+      <li>Update this document - both the initial header line and the
+        name of the tar file in the introduction and quick start
+        sections.&nbsp; (Some of the references are links, meaning you
+        have to change both the displayed link and the href.&nbsp; I
+        find it easier to just edit the index.html with a normal text
+        editor and search for "[0-9]\.[0-9]".</li>
+    </ul>
+    <br>
+  </body>
+</html>
+
