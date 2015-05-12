@@ -1,10 +1,13 @@
-/* q_selftest.h - unit test for q module.  See http://geeky-boy.com/q/ */
+/* q_selftest.h - unit test for q module.  See https://github.com/fordsfords/q/tree/gh-pages */
 /* Only included when q.c is built with "-DSELFTEST" */
 /*
-# This code and its documentation is Copyright 2014 Steven Ford, sford@geeky-boy.com
-# and licensed under Creative Commons "CC0": http://creativecommons.org/publicdomain/zero/1.0/
-# To the extent possible under law, Steve Ford has waived all copyright and related or
-# neighboring rights to this work.  This work is published from: United States.
+# This code and its documentation is Copyright 2014, 2015 Steven Ford, http://geeky-boy.com
+# and licensed "public domain" style under Creative Commons "CC0": http://creativecommons.org/publicdomain/zero/1.0/
+# To the extent possible under law, the contributors to this project have
+# waived all copyright and related or neighboring rights to this work.
+# In other words, you can use this code for any purpose without any
+# restrictions.  This work is published from: United States.  The project home
+# is https://github.com/fordsfords/q/tree/gh-pages
 */
 
 #include <unistd.h>

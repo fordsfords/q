@@ -5,7 +5,7 @@ The q package is a C module which implements a fast, lock-free, non-blocking que
 
 ## License
 
-Copyright 2012, 2015 Steven Ford http://geeky-boy.com and licensed
+Copyright 2014, 2015 Steven Ford http://geeky-boy.com and licensed
 "public domain" style under
 [CC0](http://creativecommons.org/publicdomain/zero/1.0/): 
 ![CC0](https://licensebuttons.net/p/zero/1.0/88x31.png "CC0")

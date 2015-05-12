@@ -1,72 +1,157 @@
-<html><head><title>q_h.txt</title></head>
-<html><head><title>q_h.txt</title></head>
+<!DOCTYPE html><html><head><title>q_h.txt</title>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/highlight.min.js"></script>
+<script>
+  $(function() {
+    $( document ).tooltip();
+  });
+</script>
+<style>
+#code {background-color:#ffffff;};
+</style>
+</head>
 <body><h1>q_h.txt</h1>
-<p><em>Hint:</em> do not cut-and-paste from this page.  Instead, right-click on '<a href="q_h.txt">q_h.txt</a>' and save file.
-<small><pre>
-00001  /* q.h - lock-free, non-blocking message queue.  See http://geeky-boy.com/q/ */
-00002  /*
-00003  # This code and its documentation is Copyright 2014 Steven Ford, sford@geeky-boy.com
-00004  # and licensed under Creative Commons "CC0": http://creativecommons.org/publicdomain/zero/1.0/
-00005  # To the extent possible under law, Steve Ford has waived all copyright and related or
-00006  # neighboring rights to this work.  This work is published from: United States.
-00007  */
-00008  
-00009  #ifndef Q_H
-00010  #define Q_H
-00011  
-00012  typedef unsigned int qerr_t;     /* see QERR_* definitions above */
-00013  
-<a name="q_t" id="q_t"></a><a href="q.sldoc.html#q_t_ref_1" target="doc">00014</a>  struct q_s;                       /* forward (opaque) definition */
-<a href="q.sldoc.html#q_t_ref_1" target="doc">00015</a>  typedef struct q_s q_t;           /* object type of queue instance */
-00016  
-<a name="apis" id="apis"></a><a name="qerr_defs" id="qerr_defs"></a><a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00017</a>  /* Most q APIs return "qerr_t".  These definitions must
-<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00018</a>   * be kept in sync with the "qerrs" string array in "q.c". */
-<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00019</a>  #define QERR_OK 0         /* Success */
-<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00020</a>  #define QERR_BUG1 1       /* Internal software bug - should never happen */
-<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00021</a>  #define QERR_BUG2 2       /* Internal software bug - should never happen */
-<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00022</a>  #define QERR_BADSIZE 3    /* q_size parameter invalid */
-<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00023</a>  #define QERR_MALLOCERR 4  /* No memory available */
-<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00024</a>  #define QERR_FULL 5       /* No room in queue */
-<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00025</a>  #define QERR_EMPTY 6      /* No messages in queue */
-<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00026</a>  #define LAST_QERR 6   /* Set to value of last "QERR_*" definition */
-<a href="q.sldoc.html#apis_ref_1" target="doc">00027</a>  
-<a href="q.sldoc.html#apis_ref_1" target="doc">00028</a>  qerr_t q_create(q_t **rtn_q, unsigned int q_size);
-<a href="q.sldoc.html#apis_ref_1" target="doc">00029</a>  /* Create an instance of a queue.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00030</a>   * rtn_q  : Pointer to caller's queue instance handle.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00031</a>   * q_size : Number of queue elements to allocate.  Must be &gt; 1 and a power
-<a href="q.sldoc.html#apis_ref_1" target="doc">00032</a>   *          of 2.  Due to the nature of the algorithm used, a maximum of
-<a href="q.sldoc.html#apis_ref_1" target="doc">00033</a>   *          q_size - 1 elements can actually be stored in the queue.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00034</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
-<a href="q.sldoc.html#apis_ref_1" target="doc">00035</a>  
-<a href="q.sldoc.html#apis_ref_1" target="doc">00036</a>  qerr_t q_delete(q_t *q);
-<a href="q.sldoc.html#apis_ref_1" target="doc">00037</a>  /* Delete an instance of a queue.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00038</a>   * q : Queue instance handle.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00039</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
-<a href="q.sldoc.html#apis_ref_1" target="doc">00040</a>  
-<a href="q.sldoc.html#apis_ref_1" target="doc">00041</a>  qerr_t q_enq( q_t *q, void *m);
-<a href="q.sldoc.html#apis_ref_1" target="doc">00042</a>  /* Add a message to the queue.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00043</a>   * q : Queue instance handle.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00044</a>   * m : Message to enqueue.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00045</a>   * Returns QERR_OK on success, QERR_FULL if queue full, or other QERR_* value on error. */
-<a href="q.sldoc.html#apis_ref_1" target="doc">00046</a>  
-<a href="q.sldoc.html#apis_ref_1" target="doc">00047</a>  qerr_t q_deq(q_t *q, void **rtn_m);
-<a href="q.sldoc.html#apis_ref_1" target="doc">00048</a>  /* Remove a message from the queue.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00049</a>   * q     : Queue instance handle.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00050</a>   * rtn_m : Pointer to caller's message handle.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00051</a>   * Returns QERR_OK on success, QERR_EMPTY if queue empty, or other QERR_* value on error. */
-<a href="q.sldoc.html#apis_ref_1" target="doc">00052</a>  
-<a href="q.sldoc.html#apis_ref_1" target="doc">00053</a>  int q_is_empty(q_t *q);
-<a href="q.sldoc.html#apis_ref_1" target="doc">00054</a>  /* Returns 1 if queue is empty (contains no messages), 0 otherwise.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00055</a>   * q : Queue instance handle. */
-<a href="q.sldoc.html#apis_ref_1" target="doc">00056</a>  
-<a href="q.sldoc.html#apis_ref_1" target="doc">00057</a>  int q_is_full(q_t *q);
-<a href="q.sldoc.html#apis_ref_1" target="doc">00058</a>  /* Returns 1 if queue is full (contains q_size-1 message), 0 otherwise.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00059</a>   * q : Queue instance handle. */
-<a href="q.sldoc.html#apis_ref_1" target="doc">00060</a>  
-<a href="q.sldoc.html#apis_ref_1" target="doc">00061</a>  char *q_qerr_str(qerr_t qerr);
-<a href="q.sldoc.html#apis_ref_1" target="doc">00062</a>  /* Returns a string representation of a queue API return error code.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00063</a>   * qerr : value returned by most q APIs indicating success or faiure.
-<a href="q.sldoc.html#apis_ref_1" target="doc">00064</a>   * (See q.h for list of QERR_* definitions.) */
-00065  
-00066  #endif  /* Q_H */
-</pre></small></body></html>
+<script>hljs.initHighlightingOnLoad();</script>
+<small><pre><code id="code"><table border=0 cellpadding=0 cellspacing=0><tr>
+<a name="q_t" id="q_t"></a><a name="apis" id="apis"></a><a name="qerr_defs" id="qerr_defs"></a><td>00001
+00002
+00003
+00004
+00005
+00006
+00007
+00008
+00009
+00010
+00011
+00012
+00013
+00014
+00015
+00016
+<a href="q.sldoc.html#q_t_ref_1" target="doc">00017</a>
+<a href="q.sldoc.html#q_t_ref_1" target="doc">00018</a>
+00019
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00020</a>
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00021</a>
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00022</a>
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00023</a>
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00024</a>
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00025</a>
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00026</a>
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00027</a>
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00028</a>
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00029</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00030</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00031</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00032</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00033</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00034</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00035</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00036</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00037</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00038</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00039</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00040</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00041</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00042</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00043</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00044</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00045</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00046</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00047</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00048</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00049</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00050</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00051</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00052</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00053</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00054</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00055</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00056</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00057</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00058</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00059</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00060</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00061</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00062</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00063</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00064</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00065</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00066</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00067</a>
+00068
+00069
+</td><td>  /* q.h - lock-free, non-blocking message queue.  See https://github.com/fordsfords/q/tree/gh-pages */
+  /*
+  # This code and its documentation is Copyright 2014, 2015 Steven Ford, http://geeky-boy.com
+  # and licensed "public domain" style under Creative Commons "CC0": http://creativecommons.org/publicdomain/zero/1.0/
+  # To the extent possible under law, the contributors to this project have
+  # waived all copyright and related or neighboring rights to this work.
+  # In other words, you can use this code for any purpose without any
+  # restrictions.  This work is published from: United States.  The project home
+  # is https://github.com/fordsfords/q/tree/gh-pages
+  */
+  
+  #ifndef Q_H
+  #define Q_H
+  
+  typedef unsigned int qerr_t;     /* see QERR_* definitions above */
+  
+  struct q_s;                       /* forward (opaque) definition */
+  typedef struct q_s q_t;           /* object type of queue instance */
+  
+  /* Most q APIs return "qerr_t".  These definitions must
+   * be kept in sync with the "qerrs" string array in "q.c". */
+  #define QERR_OK 0         /* Success */
+  #define QERR_BUG1 1       /* Internal software bug - should never happen */
+  #define QERR_BUG2 2       /* Internal software bug - should never happen */
+  #define QERR_BADSIZE 3    /* q_size parameter invalid */
+  #define QERR_MALLOCERR 4  /* No memory available */
+  #define QERR_FULL 5       /* No room in queue */
+  #define QERR_EMPTY 6      /* No messages in queue */
+  #define LAST_QERR 6   /* Set to value of last "QERR_*" definition */
+  
+  qerr_t q_create(q_t **rtn_q, unsigned int q_size);
+  /* Create an instance of a queue.
+   * rtn_q  : Pointer to caller's queue instance handle.
+   * q_size : Number of queue elements to allocate.  Must be &gt; 1 and a power
+   *          of 2.  Due to the nature of the algorithm used, a maximum of
+   *          q_size - 1 elements can actually be stored in the queue.
+   * Returns QERR_OK on success, or other QERR_* value on error. */
+  
+  qerr_t q_delete(q_t *q);
+  /* Delete an instance of a queue.
+   * q : Queue instance handle.
+   * Returns QERR_OK on success, or other QERR_* value on error. */
+  
+  qerr_t q_enq( q_t *q, void *m);
+  /* Add a message to the queue.
+   * q : Queue instance handle.
+   * m : Message to enqueue.
+   * Returns QERR_OK on success, QERR_FULL if queue full, or other QERR_* value on error. */
+  
+  qerr_t q_deq(q_t *q, void **rtn_m);
+  /* Remove a message from the queue.
+   * q     : Queue instance handle.
+   * rtn_m : Pointer to caller's message handle.
+   * Returns QERR_OK on success, QERR_EMPTY if queue empty, or other QERR_* value on error. */
+  
+  int q_is_empty(q_t *q);
+  /* Returns 1 if queue is empty (contains no messages), 0 otherwise.
+   * q : Queue instance handle. */
+  
+  int q_is_full(q_t *q);
+  /* Returns 1 if queue is full (contains q_size-1 message), 0 otherwise.
+   * q : Queue instance handle. */
+  
+  char *q_qerr_str(qerr_t qerr);
+  /* Returns a string representation of a queue API return error code.
+   * qerr : value returned by most q APIs indicating success or faiure.
+   * (See q.h for list of QERR_* definitions.) */
+  
+  #endif  /* Q_H */
+</td></tr></table></code></pre></small></body></html>

@@ -8,12 +8,12 @@
   <body>
     <h1><a class="mozTocH1" name="mozTocId336658"></a>q Module<br>
     </h1>
-    <p>This is a <a href="http://geeky-boy.com/semlit/">semi-literate
+    <p>This is a <a href="https://github.com/fordsfords/semlit/tree/gh-pages">semi-literate
         document</a> for the module <tt>q.c</tt> and it's associated
       files.&nbsp; This module implements a fast, lock-free,
       non-blocking queue.<br>
     </p>
-    <p>Copyright 2014 Steven Ford <a href="http://geeky-boy.com">http://geeky-boy.com</a> and
+    <p>Copyright 2014,2015 Steven Ford <a href="http://geeky-boy.com">http://geeky-boy.com</a> and
 licensed as <b>public domain (CC0)</b>:</p>
     <p xmlns:dct="http://purl.org/dc/terms/"
       xmlns:vcard="http://www.w3.org/2001/vcard-rdf/3.0#"> <a
@@ -26,7 +26,7 @@ licensed as <b>public domain (CC0)</b>:</p>
       this work. This work is published from: <span
         property="vcard:Country" datatype="dct:ISO3166" content="US"
         about="geeky-boy.com"> United States</span>.&nbsp; The project
-      home is <a href="http://geeky-boy.com/q">http://geeky-boy.com/q</a>.&nbsp;
+      home is <a href="https://github.com/fordsfords/semlit/tree/gh-pages">https://github.com/fordsfords/semlit/tree/gh-pages</a>.&nbsp;
       To contact me, Steve Ford, project owner, you can find my email
       address at <a href="http://geeky-boy.com">http://geeky-boy.com</a>.&nbsp;
       Can't see it?&nbsp; Keep looking.</p>
@@ -120,54 +120,54 @@ licensed as <b>public domain (CC0)</b>:</p>
     <h2><a class="mozTocH2" name="mozTocId641188"></a>Q API</h2>
     The API is documented in <tt>q.h</tt>: <a name="apis_ref_1" id="apis_ref_1"></a>
 <small><pre>
-<a href="q_h.slsrc.html#apis" target="src">00017</a>  /* Most q APIs return "qerr_t".  These definitions must
-<a href="q_h.slsrc.html#apis" target="src">00018</a>   * be kept in sync with the "qerrs" string array in "q.c". */
-<a href="q_h.slsrc.html#apis" target="src">00019</a>  #define QERR_OK 0         /* Success */
-<a href="q_h.slsrc.html#apis" target="src">00020</a>  #define QERR_BUG1 1       /* Internal software bug - should never happen */
-<a href="q_h.slsrc.html#apis" target="src">00021</a>  #define QERR_BUG2 2       /* Internal software bug - should never happen */
-<a href="q_h.slsrc.html#apis" target="src">00022</a>  #define QERR_BADSIZE 3    /* q_size parameter invalid */
-<a href="q_h.slsrc.html#apis" target="src">00023</a>  #define QERR_MALLOCERR 4  /* No memory available */
-<a href="q_h.slsrc.html#apis" target="src">00024</a>  #define QERR_FULL 5       /* No room in queue */
-<a href="q_h.slsrc.html#apis" target="src">00025</a>  #define QERR_EMPTY 6      /* No messages in queue */
-<a href="q_h.slsrc.html#apis" target="src">00026</a>  #define LAST_QERR 6   /* Set to value of last "QERR_*" definition */
-<a href="q_h.slsrc.html#apis" target="src">00027</a>  
-<a href="q_h.slsrc.html#apis" target="src">00028</a>  qerr_t q_create(q_t **rtn_q, unsigned int q_size);
-<a href="q_h.slsrc.html#apis" target="src">00029</a>  /* Create an instance of a queue.
-<a href="q_h.slsrc.html#apis" target="src">00030</a>   * rtn_q  : Pointer to caller's queue instance handle.
-<a href="q_h.slsrc.html#apis" target="src">00031</a>   * q_size : Number of queue elements to allocate.  Must be &gt; 1 and a power
-<a href="q_h.slsrc.html#apis" target="src">00032</a>   *          of 2.  Due to the nature of the algorithm used, a maximum of
-<a href="q_h.slsrc.html#apis" target="src">00033</a>   *          q_size - 1 elements can actually be stored in the queue.
-<a href="q_h.slsrc.html#apis" target="src">00034</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
-<a href="q_h.slsrc.html#apis" target="src">00035</a>  
-<a href="q_h.slsrc.html#apis" target="src">00036</a>  qerr_t q_delete(q_t *q);
-<a href="q_h.slsrc.html#apis" target="src">00037</a>  /* Delete an instance of a queue.
-<a href="q_h.slsrc.html#apis" target="src">00038</a>   * q : Queue instance handle.
-<a href="q_h.slsrc.html#apis" target="src">00039</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
-<a href="q_h.slsrc.html#apis" target="src">00040</a>  
-<a href="q_h.slsrc.html#apis" target="src">00041</a>  qerr_t q_enq( q_t *q, void *m);
-<a href="q_h.slsrc.html#apis" target="src">00042</a>  /* Add a message to the queue.
-<a href="q_h.slsrc.html#apis" target="src">00043</a>   * q : Queue instance handle.
-<a href="q_h.slsrc.html#apis" target="src">00044</a>   * m : Message to enqueue.
-<a href="q_h.slsrc.html#apis" target="src">00045</a>   * Returns QERR_OK on success, QERR_FULL if queue full, or other QERR_* value on error. */
-<a href="q_h.slsrc.html#apis" target="src">00046</a>  
-<a href="q_h.slsrc.html#apis" target="src">00047</a>  qerr_t q_deq(q_t *q, void **rtn_m);
-<a href="q_h.slsrc.html#apis" target="src">00048</a>  /* Remove a message from the queue.
-<a href="q_h.slsrc.html#apis" target="src">00049</a>   * q     : Queue instance handle.
-<a href="q_h.slsrc.html#apis" target="src">00050</a>   * rtn_m : Pointer to caller's message handle.
-<a href="q_h.slsrc.html#apis" target="src">00051</a>   * Returns QERR_OK on success, QERR_EMPTY if queue empty, or other QERR_* value on error. */
-<a href="q_h.slsrc.html#apis" target="src">00052</a>  
-<a href="q_h.slsrc.html#apis" target="src">00053</a>  int q_is_empty(q_t *q);
-<a href="q_h.slsrc.html#apis" target="src">00054</a>  /* Returns 1 if queue is empty (contains no messages), 0 otherwise.
-<a href="q_h.slsrc.html#apis" target="src">00055</a>   * q : Queue instance handle. */
-<a href="q_h.slsrc.html#apis" target="src">00056</a>  
-<a href="q_h.slsrc.html#apis" target="src">00057</a>  int q_is_full(q_t *q);
-<a href="q_h.slsrc.html#apis" target="src">00058</a>  /* Returns 1 if queue is full (contains q_size-1 message), 0 otherwise.
-<a href="q_h.slsrc.html#apis" target="src">00059</a>   * q : Queue instance handle. */
-<a href="q_h.slsrc.html#apis" target="src">00060</a>  
-<a href="q_h.slsrc.html#apis" target="src">00061</a>  char *q_qerr_str(qerr_t qerr);
-<a href="q_h.slsrc.html#apis" target="src">00062</a>  /* Returns a string representation of a queue API return error code.
-<a href="q_h.slsrc.html#apis" target="src">00063</a>   * qerr : value returned by most q APIs indicating success or faiure.
-<a href="q_h.slsrc.html#apis" target="src">00064</a>   * (See q.h for list of QERR_* definitions.) */
+<a href="q_h.slsrc.html#apis" target="src">00020</a>  /* Most q APIs return "qerr_t".  These definitions must
+<a href="q_h.slsrc.html#apis" target="src">00021</a>   * be kept in sync with the "qerrs" string array in "q.c". */
+<a href="q_h.slsrc.html#apis" target="src">00022</a>  #define QERR_OK 0         /* Success */
+<a href="q_h.slsrc.html#apis" target="src">00023</a>  #define QERR_BUG1 1       /* Internal software bug - should never happen */
+<a href="q_h.slsrc.html#apis" target="src">00024</a>  #define QERR_BUG2 2       /* Internal software bug - should never happen */
+<a href="q_h.slsrc.html#apis" target="src">00025</a>  #define QERR_BADSIZE 3    /* q_size parameter invalid */
+<a href="q_h.slsrc.html#apis" target="src">00026</a>  #define QERR_MALLOCERR 4  /* No memory available */
+<a href="q_h.slsrc.html#apis" target="src">00027</a>  #define QERR_FULL 5       /* No room in queue */
+<a href="q_h.slsrc.html#apis" target="src">00028</a>  #define QERR_EMPTY 6      /* No messages in queue */
+<a href="q_h.slsrc.html#apis" target="src">00029</a>  #define LAST_QERR 6   /* Set to value of last "QERR_*" definition */
+<a href="q_h.slsrc.html#apis" target="src">00030</a>  
+<a href="q_h.slsrc.html#apis" target="src">00031</a>  qerr_t q_create(q_t **rtn_q, unsigned int q_size);
+<a href="q_h.slsrc.html#apis" target="src">00032</a>  /* Create an instance of a queue.
+<a href="q_h.slsrc.html#apis" target="src">00033</a>   * rtn_q  : Pointer to caller's queue instance handle.
+<a href="q_h.slsrc.html#apis" target="src">00034</a>   * q_size : Number of queue elements to allocate.  Must be &gt; 1 and a power
+<a href="q_h.slsrc.html#apis" target="src">00035</a>   *          of 2.  Due to the nature of the algorithm used, a maximum of
+<a href="q_h.slsrc.html#apis" target="src">00036</a>   *          q_size - 1 elements can actually be stored in the queue.
+<a href="q_h.slsrc.html#apis" target="src">00037</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
+<a href="q_h.slsrc.html#apis" target="src">00038</a>  
+<a href="q_h.slsrc.html#apis" target="src">00039</a>  qerr_t q_delete(q_t *q);
+<a href="q_h.slsrc.html#apis" target="src">00040</a>  /* Delete an instance of a queue.
+<a href="q_h.slsrc.html#apis" target="src">00041</a>   * q : Queue instance handle.
+<a href="q_h.slsrc.html#apis" target="src">00042</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
+<a href="q_h.slsrc.html#apis" target="src">00043</a>  
+<a href="q_h.slsrc.html#apis" target="src">00044</a>  qerr_t q_enq( q_t *q, void *m);
+<a href="q_h.slsrc.html#apis" target="src">00045</a>  /* Add a message to the queue.
+<a href="q_h.slsrc.html#apis" target="src">00046</a>   * q : Queue instance handle.
+<a href="q_h.slsrc.html#apis" target="src">00047</a>   * m : Message to enqueue.
+<a href="q_h.slsrc.html#apis" target="src">00048</a>   * Returns QERR_OK on success, QERR_FULL if queue full, or other QERR_* value on error. */
+<a href="q_h.slsrc.html#apis" target="src">00049</a>  
+<a href="q_h.slsrc.html#apis" target="src">00050</a>  qerr_t q_deq(q_t *q, void **rtn_m);
+<a href="q_h.slsrc.html#apis" target="src">00051</a>  /* Remove a message from the queue.
+<a href="q_h.slsrc.html#apis" target="src">00052</a>   * q     : Queue instance handle.
+<a href="q_h.slsrc.html#apis" target="src">00053</a>   * rtn_m : Pointer to caller's message handle.
+<a href="q_h.slsrc.html#apis" target="src">00054</a>   * Returns QERR_OK on success, QERR_EMPTY if queue empty, or other QERR_* value on error. */
+<a href="q_h.slsrc.html#apis" target="src">00055</a>  
+<a href="q_h.slsrc.html#apis" target="src">00056</a>  int q_is_empty(q_t *q);
+<a href="q_h.slsrc.html#apis" target="src">00057</a>  /* Returns 1 if queue is empty (contains no messages), 0 otherwise.
+<a href="q_h.slsrc.html#apis" target="src">00058</a>   * q : Queue instance handle. */
+<a href="q_h.slsrc.html#apis" target="src">00059</a>  
+<a href="q_h.slsrc.html#apis" target="src">00060</a>  int q_is_full(q_t *q);
+<a href="q_h.slsrc.html#apis" target="src">00061</a>  /* Returns 1 if queue is full (contains q_size-1 message), 0 otherwise.
+<a href="q_h.slsrc.html#apis" target="src">00062</a>   * q : Queue instance handle. */
+<a href="q_h.slsrc.html#apis" target="src">00063</a>  
+<a href="q_h.slsrc.html#apis" target="src">00064</a>  char *q_qerr_str(qerr_t qerr);
+<a href="q_h.slsrc.html#apis" target="src">00065</a>  /* Returns a string representation of a queue API return error code.
+<a href="q_h.slsrc.html#apis" target="src">00066</a>   * qerr : value returned by most q APIs indicating success or faiure.
+<a href="q_h.slsrc.html#apis" target="src">00067</a>   * (See q.h for list of QERR_* definitions.) */
 </pre><!-- endblock apis_ref_1 --></small>
 
 
@@ -309,20 +309,20 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     <h3><a class="mozTocH3" name="mozTocId56359"></a>Function q_enq</h3>
     To enqueue a message: <a name="enqueue_ref_1" id="enqueue_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#enqueue" target="src">00138</a>  qerr_t q_enq(q_t *q, void *m)
-<a href="q_c.slsrc.html#enqueue" target="src">00139</a>  {
-<a href="q_c.slsrc.html#enqueue" target="src">00140</a>      unsigned int tail = (unsigned)(q-&gt;enq_cnt &amp; q-&gt;size_mask);
-<a href="q_c.slsrc.html#enqueue" target="src">00141</a>  
-<a href="q_c.slsrc.html#enqueue" target="src">00142</a>      /* Queue must always have at least one empty slot.  Make sure that
-<a href="q_c.slsrc.html#enqueue" target="src">00143</a>       * after the current tail is filled, the next slot will be empty. */
-<a href="q_c.slsrc.html#enqueue" target="src">00144</a>      unsigned int next_tail = (tail + 1) &amp; q-&gt;size_mask;
-<a href="q_c.slsrc.html#enqueue" target="src">00145</a>      if (q-&gt;msgs[next_tail].in_use) { return QERR_FULL; }  /* Queue is full, item not added */
-<a href="q_c.slsrc.html#enqueue" target="src">00146</a>  
-<a href="q_c.slsrc.html#enqueue" target="src">00147</a>      q-&gt;msgs[tail].d = (void * volatile)m;
-<a href="q_c.slsrc.html#enqueue" target="src">00148</a>      q-&gt;msgs[tail].in_use = 1;
-<a href="q_c.slsrc.html#enqueue" target="src">00149</a>      q-&gt;enq_cnt++;
-<a href="q_c.slsrc.html#enqueue" target="src">00150</a>      return QERR_OK;
-<a href="q_c.slsrc.html#enqueue" target="src">00151</a>  }  /* q_enq */
+<a href="q_c.slsrc.html#enqueue" target="src">00141</a>  qerr_t q_enq(q_t *q, void *m)
+<a href="q_c.slsrc.html#enqueue" target="src">00142</a>  {
+<a href="q_c.slsrc.html#enqueue" target="src">00143</a>      unsigned int tail = (unsigned)(q-&gt;enq_cnt &amp; q-&gt;size_mask);
+<a href="q_c.slsrc.html#enqueue" target="src">00144</a>  
+<a href="q_c.slsrc.html#enqueue" target="src">00145</a>      /* Queue must always have at least one empty slot.  Make sure that
+<a href="q_c.slsrc.html#enqueue" target="src">00146</a>       * after the current tail is filled, the next slot will be empty. */
+<a href="q_c.slsrc.html#enqueue" target="src">00147</a>      unsigned int next_tail = (tail + 1) &amp; q-&gt;size_mask;
+<a href="q_c.slsrc.html#enqueue" target="src">00148</a>      if (q-&gt;msgs[next_tail].in_use) { return QERR_FULL; }  /* Queue is full, item not added */
+<a href="q_c.slsrc.html#enqueue" target="src">00149</a>  
+<a href="q_c.slsrc.html#enqueue" target="src">00150</a>      q-&gt;msgs[tail].d = (void * volatile)m;
+<a href="q_c.slsrc.html#enqueue" target="src">00151</a>      q-&gt;msgs[tail].in_use = 1;
+<a href="q_c.slsrc.html#enqueue" target="src">00152</a>      q-&gt;enq_cnt++;
+<a href="q_c.slsrc.html#enqueue" target="src">00153</a>      return QERR_OK;
+<a href="q_c.slsrc.html#enqueue" target="src">00154</a>  }  /* q_enq */
 </pre><!-- endblock enqueue_ref_1 --></small>
 
  The tail pointer is
@@ -332,7 +332,7 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     bit-wise ANDed with the the number of array elements minus 1:
     <a name="tailcalc_ref_1" id="tailcalc_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#tailcalc" target="src">00140</a>      unsigned int tail = (unsigned)(q-&gt;enq_cnt &amp; q-&gt;size_mask);
+<a href="q_c.slsrc.html#tailcalc" target="src">00143</a>      unsigned int tail = (unsigned)(q-&gt;enq_cnt &amp; q-&gt;size_mask);
 </pre><!-- endblock tailcalc_ref_1 --></small>
 
 <br>
@@ -340,16 +340,16 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     </h3>
     To dequeue a message: <a name="dequeue_ref_1" id="dequeue_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#dequeue" target="src">00155</a>  qerr_t q_deq(q_t *q, void **rtn_m)
-<a href="q_c.slsrc.html#dequeue" target="src">00156</a>  {
-<a href="q_c.slsrc.html#dequeue" target="src">00157</a>      unsigned int head = (unsigned)(q-&gt;deq_cnt &amp; q-&gt;size_mask);
-<a href="q_c.slsrc.html#dequeue" target="src">00158</a>      if (! q-&gt;msgs[head].in_use) { return QERR_EMPTY; }
-<a href="q_c.slsrc.html#dequeue" target="src">00159</a>  
-<a href="q_c.slsrc.html#dequeue" target="src">00160</a>      *rtn_m = (void *)q-&gt;msgs[head].d;
-<a href="q_c.slsrc.html#dequeue" target="src">00161</a>      q-&gt;msgs[head].in_use = 0;  /* mark it as empty */
-<a href="q_c.slsrc.html#dequeue" target="src">00162</a>      q-&gt;deq_cnt++;
-<a href="q_c.slsrc.html#dequeue" target="src">00163</a>      return QERR_OK;
-<a href="q_c.slsrc.html#dequeue" target="src">00164</a>  }  /* q_deq */
+<a href="q_c.slsrc.html#dequeue" target="src">00158</a>  qerr_t q_deq(q_t *q, void **rtn_m)
+<a href="q_c.slsrc.html#dequeue" target="src">00159</a>  {
+<a href="q_c.slsrc.html#dequeue" target="src">00160</a>      unsigned int head = (unsigned)(q-&gt;deq_cnt &amp; q-&gt;size_mask);
+<a href="q_c.slsrc.html#dequeue" target="src">00161</a>      if (! q-&gt;msgs[head].in_use) { return QERR_EMPTY; }
+<a href="q_c.slsrc.html#dequeue" target="src">00162</a>  
+<a href="q_c.slsrc.html#dequeue" target="src">00163</a>      *rtn_m = (void *)q-&gt;msgs[head].d;
+<a href="q_c.slsrc.html#dequeue" target="src">00164</a>      q-&gt;msgs[head].in_use = 0;  /* mark it as empty */
+<a href="q_c.slsrc.html#dequeue" target="src">00165</a>      q-&gt;deq_cnt++;
+<a href="q_c.slsrc.html#dequeue" target="src">00166</a>      return QERR_OK;
+<a href="q_c.slsrc.html#dequeue" target="src">00167</a>  }  /* q_deq */
 </pre><!-- endblock dequeue_ref_1 --></small>
 
  The head pointer is
@@ -357,7 +357,7 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     <tt> msgs</tt> array.&nbsp; As with <tt>q_enq</tt>, a simple
     bit-wise AND can be used: <a name="headcalc_ref_1" id="headcalc_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#headcalc" target="src">00157</a>      unsigned int head = (unsigned)(q-&gt;deq_cnt &amp; q-&gt;size_mask);
+<a href="q_c.slsrc.html#headcalc" target="src">00160</a>      unsigned int head = (unsigned)(q-&gt;deq_cnt &amp; q-&gt;size_mask);
 </pre><!-- endblock headcalc_ref_1 --></small>
 
 <br>
@@ -365,26 +365,26 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     Now let's take a look at the queue data structure:
     <a name="q_s_ref_1" id="q_s_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#q_s" target="src">00045</a>  /* message element */
-<a href="q_c.slsrc.html#q_s" target="src">00046</a>  struct q_msg_s {
-<a href="q_c.slsrc.html#q_s" target="src">00047</a>      void *d;
-<a href="q_c.slsrc.html#q_s" target="src">00048</a>      int in_use;
-<a href="q_c.slsrc.html#q_s" target="src">00049</a>  };
-<a href="q_c.slsrc.html#q_s" target="src">00050</a>  typedef struct q_msg_s q_msg_t;
-<a href="q_c.slsrc.html#q_s" target="src">00051</a>  
-<a href="q_c.slsrc.html#q_s" target="src">00052</a>  /* q.h contains an empty forward definition of "q_s", and defines "q_t" */
-<a href="q_c.slsrc.html#q_s" target="src">00053</a>  struct q_s {
-<a href="q_c.slsrc.html#q_s" target="src">00054</a>      unsigned int enq_cnt;     /* count of successful messages enqueued (tail pointer) */
-<a href="q_c.slsrc.html#q_s" target="src">00055</a>      char enq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
-<a href="q_c.slsrc.html#q_s" target="src">00056</a>  
-<a href="q_c.slsrc.html#q_s" target="src">00057</a>      unsigned int deq_cnt;     /* count of successful messages dequeued (head pointer) */
-<a href="q_c.slsrc.html#q_s" target="src">00058</a>      char deq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
+<a href="q_c.slsrc.html#q_s" target="src">00048</a>  /* message element */
+<a href="q_c.slsrc.html#q_s" target="src">00049</a>  struct q_msg_s {
+<a href="q_c.slsrc.html#q_s" target="src">00050</a>      void *d;
+<a href="q_c.slsrc.html#q_s" target="src">00051</a>      int in_use;
+<a href="q_c.slsrc.html#q_s" target="src">00052</a>  };
+<a href="q_c.slsrc.html#q_s" target="src">00053</a>  typedef struct q_msg_s q_msg_t;
+<a href="q_c.slsrc.html#q_s" target="src">00054</a>  
+<a href="q_c.slsrc.html#q_s" target="src">00055</a>  /* q.h contains an empty forward definition of "q_s", and defines "q_t" */
+<a href="q_c.slsrc.html#q_s" target="src">00056</a>  struct q_s {
+<a href="q_c.slsrc.html#q_s" target="src">00057</a>      unsigned int enq_cnt;     /* count of successful messages enqueued (tail pointer) */
+<a href="q_c.slsrc.html#q_s" target="src">00058</a>      char enq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
 <a href="q_c.slsrc.html#q_s" target="src">00059</a>  
-<a href="q_c.slsrc.html#q_s" target="src">00060</a>      q_msg_t * volatile msgs;  /* Array of "q_size" elements */
-<a href="q_c.slsrc.html#q_s" target="src">00061</a>      unsigned int size_mask;  /* Number of msgs elements minus 1 */
-<a href="q_c.slsrc.html#q_s" target="src">00062</a>      /* make total size a multiple of cache line size, to prevent interference with whatever comes after */
-<a href="q_c.slsrc.html#q_s" target="src">00063</a>      char final_pad[CACHE_LINE_SIZE - ( sizeof(unsigned int) + sizeof(void **) )];
-<a href="q_c.slsrc.html#q_s" target="src">00064</a>  };  /* struct q_s */
+<a href="q_c.slsrc.html#q_s" target="src">00060</a>      unsigned int deq_cnt;     /* count of successful messages dequeued (head pointer) */
+<a href="q_c.slsrc.html#q_s" target="src">00061</a>      char deq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
+<a href="q_c.slsrc.html#q_s" target="src">00062</a>  
+<a href="q_c.slsrc.html#q_s" target="src">00063</a>      q_msg_t * volatile msgs;  /* Array of "q_size" elements */
+<a href="q_c.slsrc.html#q_s" target="src">00064</a>      unsigned int size_mask;  /* Number of msgs elements minus 1 */
+<a href="q_c.slsrc.html#q_s" target="src">00065</a>      /* make total size a multiple of cache line size, to prevent interference with whatever comes after */
+<a href="q_c.slsrc.html#q_s" target="src">00066</a>      char final_pad[CACHE_LINE_SIZE - ( sizeof(unsigned int) + sizeof(void **) )];
+<a href="q_c.slsrc.html#q_s" target="src">00067</a>  };  /* struct q_s */
 </pre><!-- endblock q_s_ref_1 --></small>
 
  Note that this structure is private to <tt> q.c</tt>.&nbsp;
@@ -399,8 +399,8 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     The API sees an empty forward reference and type in <tt>q.h</tt>:
     <a name="q_t_ref_1" id="q_t_ref_1"></a>
 <small><pre>
-<a href="q_h.slsrc.html#q_t" target="src">00014</a>  struct q_s;                       /* forward (opaque) definition */
-<a href="q_h.slsrc.html#q_t" target="src">00015</a>  typedef struct q_s q_t;           /* object type of queue instance */
+<a href="q_h.slsrc.html#q_t" target="src">00017</a>  struct q_s;                       /* forward (opaque) definition */
+<a href="q_h.slsrc.html#q_t" target="src">00018</a>  typedef struct q_s q_t;           /* object type of queue instance */
 </pre><!-- endblock q_t_ref_1 --></small>
 
 <br>
@@ -423,7 +423,7 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     <tt>bld.sh</tt>.)&nbsp; This is used to include enough padding bytes
     to align to cache lines: <a name="pad_ref_1" id="pad_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#pad" target="src">00055</a>      char enq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
+<a href="q_c.slsrc.html#pad" target="src">00058</a>      char enq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
 </pre><!-- endblock pad_ref_1 --></small>
 
  Note that it is
@@ -440,34 +440,34 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     function).&nbsp; The manifest constants are defined in <tt>q.h</tt>:
     <a name="qerr_defs_ref_1" id="qerr_defs_ref_1"></a>
 <small><pre>
-<a href="q_h.slsrc.html#qerr_defs" target="src">00017</a>  /* Most q APIs return "qerr_t".  These definitions must
-<a href="q_h.slsrc.html#qerr_defs" target="src">00018</a>   * be kept in sync with the "qerrs" string array in "q.c". */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00019</a>  #define QERR_OK 0         /* Success */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00020</a>  #define QERR_BUG1 1       /* Internal software bug - should never happen */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00021</a>  #define QERR_BUG2 2       /* Internal software bug - should never happen */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00022</a>  #define QERR_BADSIZE 3    /* q_size parameter invalid */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00023</a>  #define QERR_MALLOCERR 4  /* No memory available */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00024</a>  #define QERR_FULL 5       /* No room in queue */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00025</a>  #define QERR_EMPTY 6      /* No messages in queue */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00026</a>  #define LAST_QERR 6   /* Set to value of last "QERR_*" definition */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00020</a>  /* Most q APIs return "qerr_t".  These definitions must
+<a href="q_h.slsrc.html#qerr_defs" target="src">00021</a>   * be kept in sync with the "qerrs" string array in "q.c". */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00022</a>  #define QERR_OK 0         /* Success */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00023</a>  #define QERR_BUG1 1       /* Internal software bug - should never happen */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00024</a>  #define QERR_BUG2 2       /* Internal software bug - should never happen */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00025</a>  #define QERR_BADSIZE 3    /* q_size parameter invalid */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00026</a>  #define QERR_MALLOCERR 4  /* No memory available */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00027</a>  #define QERR_FULL 5       /* No room in queue */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00028</a>  #define QERR_EMPTY 6      /* No messages in queue */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00029</a>  #define LAST_QERR 6   /* Set to value of last "QERR_*" definition */
 </pre><!-- endblock qerr_defs_ref_1 --></small>
 
  The strings are defined in <tt>q.c</tt>:
     <a name="qerr_strs_ref_1" id="qerr_strs_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#qerr_strs" target="src">00030</a>  /* This list of strings must be kept in sync with the
-<a href="q_c.slsrc.html#qerr_strs" target="src">00031</a>   * corresponding "QERR_*" constant definitions in "q.h".
-<a href="q_c.slsrc.html#qerr_strs" target="src">00032</a>   * It is used by the q_qerr_str() function. */
-<a href="q_c.slsrc.html#qerr_strs" target="src">00033</a>  static char *qerrs[] = {
-<a href="q_c.slsrc.html#qerr_strs" target="src">00034</a>      "QERR_OK",
-<a href="q_c.slsrc.html#qerr_strs" target="src">00035</a>      "QERR_BUG1",
-<a href="q_c.slsrc.html#qerr_strs" target="src">00036</a>      "QERR_BUG2",
-<a href="q_c.slsrc.html#qerr_strs" target="src">00037</a>      "QERR_BADSIZE",
-<a href="q_c.slsrc.html#qerr_strs" target="src">00038</a>      "QERR_MALLOCERR",
-<a href="q_c.slsrc.html#qerr_strs" target="src">00039</a>      "QERR_FULL",
-<a href="q_c.slsrc.html#qerr_strs" target="src">00040</a>      "QERR_EMPTY",
-<a href="q_c.slsrc.html#qerr_strs" target="src">00041</a>      "BAD_QERR", NULL};
-<a href="q_c.slsrc.html#qerr_strs" target="src">00042</a>  #define BAD_QERR (sizeof(qerrs)/sizeof(qerrs[0]) - 2)
+<a href="q_c.slsrc.html#qerr_strs" target="src">00033</a>  /* This list of strings must be kept in sync with the
+<a href="q_c.slsrc.html#qerr_strs" target="src">00034</a>   * corresponding "QERR_*" constant definitions in "q.h".
+<a href="q_c.slsrc.html#qerr_strs" target="src">00035</a>   * It is used by the q_qerr_str() function. */
+<a href="q_c.slsrc.html#qerr_strs" target="src">00036</a>  static char *qerrs[] = {
+<a href="q_c.slsrc.html#qerr_strs" target="src">00037</a>      "QERR_OK",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00038</a>      "QERR_BUG1",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00039</a>      "QERR_BUG2",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00040</a>      "QERR_BADSIZE",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00041</a>      "QERR_MALLOCERR",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00042</a>      "QERR_FULL",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00043</a>      "QERR_EMPTY",
+<a href="q_c.slsrc.html#qerr_strs" target="src">00044</a>      "BAD_QERR", NULL};
+<a href="q_c.slsrc.html#qerr_strs" target="src">00045</a>  #define BAD_QERR (sizeof(qerrs)/sizeof(qerrs[0]) - 2)
 </pre><!-- endblock qerr_strs_ref_1 --></small>
 
  When a maintainer is modifying the q
@@ -476,24 +476,24 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     mistakes, <tt>q_create()</tt> does a sanity check:
     <a name="qerr_chk_ref_1" id="qerr_chk_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#qerr_chk" target="src">00087</a>      /* Sanity check the error code definitions and strings */
-<a href="q_c.slsrc.html#qerr_chk" target="src">00088</a>      if (LAST_QERR != BAD_QERR - 1) { return QERR_BUG1; }  /* the QERR_* are out of sync with qerrs[] */
+<a href="q_c.slsrc.html#qerr_chk" target="src">00090</a>      /* Sanity check the error code definitions and strings */
+<a href="q_c.slsrc.html#qerr_chk" target="src">00091</a>      if (LAST_QERR != BAD_QERR - 1) { return QERR_BUG1; }  /* the QERR_* are out of sync with qerrs[] */
 </pre><!-- endblock qerr_chk_ref_1 --></small>
 
  The unit test code in <tt>q_selftest.c</tt>
     also does some sanity checking: <a name="qerr_utst_ref_1" id="qerr_utst_ref_1"></a>
 <small><pre>
-<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00306</a>      if (strcmp(q_qerr_str(QERR_OK), "QERR_OK") != 0) { ERR("q_qerr_str OK"); }
-<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00307</a>      if (strcmp(q_qerr_str(QERR_BUG1), "QERR_BUG1") != 0) { ERR("q_qerr_str BUG1"); }
-<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00308</a>      if (strcmp(q_qerr_str(QERR_BUG2), "QERR_BUG2") != 0) { ERR("q_qerr_str BUG2"); }
-<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00309</a>      if (strcmp(q_qerr_str(QERR_BADSIZE), "QERR_BADSIZE") != 0) { ERR("q_qerr_str BADSIZE"); }
-<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00310</a>      if (strcmp(q_qerr_str(QERR_MALLOCERR), "QERR_MALLOCERR") != 0) { ERR("q_qerr_str MALLOCERR"); }
-<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00311</a>      if (strcmp(q_qerr_str(QERR_FULL), "QERR_FULL") != 0) { ERR("q_qerr_str FULL"); }
-<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00312</a>      if (strcmp(q_qerr_str(QERR_EMPTY), "QERR_EMPTY") != 0) { ERR("q_qerr_str EMPTY"); }
-<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00313</a>      if (strcmp(q_qerr_str(LAST_QERR), "QERR_EMPTY") != 0) { ERR("q_qerr_str LAST_QERR"); }
-<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00314</a>      if (strcmp(q_qerr_str(LAST_QERR+1), "BAD_QERR") != 0) { ERR("q_qerr_str BAD_QERR"); }
-<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00315</a>      if (strcmp(q_qerr_str(-1), "BAD_QERR") != 0) { ERR("q_qerr_str -1"); }
-<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00316</a>      printf("FYI %s[%d]: q_qerr_str OK\n", __FILE__, __LINE__);
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00309</a>      if (strcmp(q_qerr_str(QERR_OK), "QERR_OK") != 0) { ERR("q_qerr_str OK"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00310</a>      if (strcmp(q_qerr_str(QERR_BUG1), "QERR_BUG1") != 0) { ERR("q_qerr_str BUG1"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00311</a>      if (strcmp(q_qerr_str(QERR_BUG2), "QERR_BUG2") != 0) { ERR("q_qerr_str BUG2"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00312</a>      if (strcmp(q_qerr_str(QERR_BADSIZE), "QERR_BADSIZE") != 0) { ERR("q_qerr_str BADSIZE"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00313</a>      if (strcmp(q_qerr_str(QERR_MALLOCERR), "QERR_MALLOCERR") != 0) { ERR("q_qerr_str MALLOCERR"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00314</a>      if (strcmp(q_qerr_str(QERR_FULL), "QERR_FULL") != 0) { ERR("q_qerr_str FULL"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00315</a>      if (strcmp(q_qerr_str(QERR_EMPTY), "QERR_EMPTY") != 0) { ERR("q_qerr_str EMPTY"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00316</a>      if (strcmp(q_qerr_str(LAST_QERR), "QERR_EMPTY") != 0) { ERR("q_qerr_str LAST_QERR"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00317</a>      if (strcmp(q_qerr_str(LAST_QERR+1), "BAD_QERR") != 0) { ERR("q_qerr_str BAD_QERR"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00318</a>      if (strcmp(q_qerr_str(-1), "BAD_QERR") != 0) { ERR("q_qerr_str -1"); }
+<a href="q_selftest_c.slsrc.html#qerr_utst" target="src">00319</a>      printf("FYI %s[%d]: q_qerr_str OK\n", __FILE__, __LINE__);
 </pre><!-- endblock qerr_utst_ref_1 --></small>
 
 <br>
@@ -501,16 +501,16 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     Another debugging aid is the fact that an <i>extra</i> element is
     allocated for the <tt>msgs</tt> array: <a name="alloc_msgs_ref_1" id="alloc_msgs_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#alloc_msgs" target="src">00099</a>      /* Allocate message storage array (one extra unused element for fence) */
-<a href="q_c.slsrc.html#alloc_msgs" target="src">00100</a>      q-&gt;msgs = NULL;
-<a href="q_c.slsrc.html#alloc_msgs" target="src">00101</a>      perr = posix_memalign((void **)&amp;q-&gt;msgs, CACHE_LINE_SIZE, (q_size + 1) * sizeof(q-&gt;msgs[0]) );
+<a href="q_c.slsrc.html#alloc_msgs" target="src">00102</a>      /* Allocate message storage array (one extra unused element for fence) */
+<a href="q_c.slsrc.html#alloc_msgs" target="src">00103</a>      q-&gt;msgs = NULL;
+<a href="q_c.slsrc.html#alloc_msgs" target="src">00104</a>      perr = posix_memalign((void **)&amp;q-&gt;msgs, CACHE_LINE_SIZE, (q_size + 1) * sizeof(q-&gt;msgs[0]) );
 </pre><!-- endblock alloc_msgs_ref_1 --></small>
 
  A
     bit later, the ex extra element is set to <tt>Q_FENCE</tt>:
     <a name="fence_set_ref_1" id="fence_set_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#fence_set" target="src">00104</a>      q-&gt;msgs[q_size].d = (void *)Q_FENCE;  /* used by unit tests to insure no overflow */
+<a href="q_c.slsrc.html#fence_set" target="src">00107</a>      q-&gt;msgs[q_size].d = (void *)Q_FENCE;  /* used by unit tests to insure no overflow */
 </pre><!-- endblock fence_set_ref_1 --></small>
 
  <tt>Q_FENCE</tt> is a manifest constant
@@ -526,7 +526,7 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
 
     <a name="fence_def_ref_1" id="fence_def_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#fence_def" target="src">00028</a>  #define Q_FENCE 0x7d831f20   /* used for testing (random number generated at random.org) */
+<a href="q_c.slsrc.html#fence_def" target="src">00031</a>  #define Q_FENCE 0x7d831f20   /* used for testing (random number generated at random.org) */
 </pre><!-- endblock fence_def_ref_1 --></small>
 
 &nbsp; This element and value are only used
@@ -534,7 +534,7 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     algorithm should never allow).&nbsp; This is done in <tt>q_delete()</tt>:
     <a name="fence_chk_ref_1" id="fence_chk_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#fence_chk" target="src">00127</a>      if (q-&gt;msgs[q-&gt;size_mask + 1].d != (void *)Q_FENCE) { return QERR_BUG1; }
+<a href="q_c.slsrc.html#fence_chk" target="src">00130</a>      if (q-&gt;msgs[q-&gt;size_mask + 1].d != (void *)Q_FENCE) { return QERR_BUG1; }
 </pre><!-- endblock fence_chk_ref_1 --></small>
 
 <br>
@@ -545,18 +545,18 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     conditionally included by <tt>q.c</tt>:
     <a name="inc_selftest_h_ref_1" id="inc_selftest_h_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#inc_selftest_h" target="src">00021</a>  /* If built with "-DSELFTEST" then include extras for unit testing. */
-<a href="q_c.slsrc.html#inc_selftest_h" target="src">00022</a>  #ifdef SELFTEST
-<a href="q_c.slsrc.html#inc_selftest_h" target="src">00023</a>  #  include "q_selftest.h"
-<a href="q_c.slsrc.html#inc_selftest_h" target="src">00024</a>  #endif
+<a href="q_c.slsrc.html#inc_selftest_h" target="src">00024</a>  /* If built with "-DSELFTEST" then include extras for unit testing. */
+<a href="q_c.slsrc.html#inc_selftest_h" target="src">00025</a>  #ifdef SELFTEST
+<a href="q_c.slsrc.html#inc_selftest_h" target="src">00026</a>  #  include "q_selftest.h"
+<a href="q_c.slsrc.html#inc_selftest_h" target="src">00027</a>  #endif
 </pre><!-- endblock inc_selftest_h_ref_1 --></small>
 
  ... <a name="inc_selftest_c_ref_1" id="inc_selftest_c_ref_1"></a>
 <small><pre>
-<a href="q_c.slsrc.html#inc_selftest_c" target="src">00184</a>  /* If built with "-DSELFTEST" then include main() for unit testing. */
-<a href="q_c.slsrc.html#inc_selftest_c" target="src">00185</a>  #ifdef SELFTEST
-<a href="q_c.slsrc.html#inc_selftest_c" target="src">00186</a>  #include "q_selftest.c"
-<a href="q_c.slsrc.html#inc_selftest_c" target="src">00187</a>  #endif
+<a href="q_c.slsrc.html#inc_selftest_c" target="src">00187</a>  /* If built with "-DSELFTEST" then include main() for unit testing. */
+<a href="q_c.slsrc.html#inc_selftest_c" target="src">00188</a>  #ifdef SELFTEST
+<a href="q_c.slsrc.html#inc_selftest_c" target="src">00189</a>  #include "q_selftest.c"
+<a href="q_c.slsrc.html#inc_selftest_c" target="src">00190</a>  #endif
 </pre><!-- endblock inc_selftest_c_ref_1 --></small>
 
 
@@ -606,7 +606,7 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     The web-based software documentation you are looking at is called
     "SemiLiterate Documentation".&nbsp; The system which generates the
     doc is called "semlit", and is freely available at <a
-      href="http://geeky-boy.com/semlit">http://geeky-boy.com/semlit</a>.<br>
+      href="https://github.com/fordsfords/semlit/tree/gh-pages">https://github.com/fordsfords/semlit/tree/gh-pages</a>.<br>
     <br>
     If you are a user of the q module, you probably don't care about any
     of this and you can probably ignore it.&nbsp; However, if you are a
@@ -621,7 +621,7 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     files by running <tt>bld.sh</tt>.<br>
     <br>
     So, first thing to do is download and install <a
-      href="http://geeky-boy.com/semlit">semlit</a>.&nbsp; Make sure
+      href="https://github.com/fordsfords/semlit/tree/gh-pages">semlit</a>.&nbsp; Make sure
     that semlit.sh is in your <tt>PATH</tt> (otherwise the q module's "<tt>bld.sh</tt>"
     will skip the semlit stuff).&nbsp; Then use an html editor (like <a
       href="http://www.seamonkey-project.org/releases/seamonkey2.13/">SeaMonkey</a>)
@@ -636,25 +636,7 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
         package (optional).</li>
       <li><tt>clean.sh</tt> - remove temporary files.</li>
       <li><tt>tst.sh</tt> - run the unit tests.</li>
-      <li><tt>tar.sh</tt> - create tarball.&nbsp; Uses "<tt>00VERSION.TXT</tt>"
-        to set the version number.</li>
-      <li><tt>publish.sh</tt> - transfer to geeky-boy.com account.&nbsp;
-        Uses "<tt>00VERSION.TXT</tt>" to set the version number.<br>
-      </li>
     </ul>
-    <p>When the package version number needs to be bumped:<br>
-    </p>
-    <ul>
-      <li>Update the "00VERSION.txt" file.&nbsp; This file is used by
-        the scripts to properly name everything.</li>
-      <li>Update this document - both the initial header line and the
-        name of the tar file in the introduction and quick start
-        sections.&nbsp; (Some of the references are links, meaning you
-        have to change both the displayed link and the href.&nbsp; I
-        find it easier to just edit the index.html with a normal text
-        editor and search for "[0-9]\.[0-9]".</li>
-    </ul>
-    <br>
   </body>
 </html>
 
