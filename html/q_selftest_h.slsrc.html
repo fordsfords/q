@@ -1,28 +1,69 @@
-<html><head><title>q_selftest_h.txt</title></head>
-<html><head><title>q_selftest_h.txt</title></head>
+<!DOCTYPE html><html><head><title>q_selftest_h.txt</title>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/highlight.min.js"></script>
+<script>
+  $(function() {
+    $( document ).tooltip();
+  });
+</script>
+<style>
+#code {background-color:#ffffff;};
+</style>
+</head>
 <body><h1>q_selftest_h.txt</h1>
-<p><em>Hint:</em> do not cut-and-paste from this page.  Instead, right-click on '<a href="q_selftest_h.txt">q_selftest_h.txt</a>' and save file.
-<small><pre>
-00001  /* q_selftest.h - unit test for q module.  See http://geeky-boy.com/q/ */
-00002  /* Only included when q.c is built with "-DSELFTEST" */
-00003  /*
-00004  # This code and its documentation is Copyright 2014 Steven Ford, sford@geeky-boy.com
-00005  # and licensed under Creative Commons "CC0": http://creativecommons.org/publicdomain/zero/1.0/
-00006  # To the extent possible under law, Steve Ford has waived all copyright and related or
-00007  # neighboring rights to this work.  This work is published from: United States.
-00008  */
-00009  
-00010  #include &lt;unistd.h&gt;
-00011  #include &lt;pthread.h&gt;
-00012  #include &lt;string.h&gt;
-00013  #include &lt;errno.h&gt;
-00014  #include &lt;sys/time.h&gt;
-00015  #include &lt;stdio.h&gt;
-00016  
-00017  /* some platforms require the program to declare these external */
-00018  extern char *optarg;
-00019  extern int optind;
-00020  extern int optopt;
-00021  extern int opterr;
-00022  extern int optreset;
-</pre></small></body></html>
+<script>hljs.initHighlightingOnLoad();</script>
+<small><pre><code id="code"><table border=0 cellpadding=0 cellspacing=0><tr>
+<td>00001
+00002
+00003
+00004
+00005
+00006
+00007
+00008
+00009
+00010
+00011
+00012
+00013
+00014
+00015
+00016
+00017
+00018
+00019
+00020
+00021
+00022
+00023
+00024
+00025
+</td><td>  /* q_selftest.h - unit test for q module.  See https://github.com/fordsfords/q/tree/gh-pages */
+  /* Only included when q.c is built with "-DSELFTEST" */
+  /*
+  # This code and its documentation is Copyright 2014, 2015 Steven Ford, http://geeky-boy.com
+  # and licensed "public domain" style under Creative Commons "CC0": http://creativecommons.org/publicdomain/zero/1.0/
+  # To the extent possible under law, the contributors to this project have
+  # waived all copyright and related or neighboring rights to this work.
+  # In other words, you can use this code for any purpose without any
+  # restrictions.  This work is published from: United States.  The project home
+  # is https://github.com/fordsfords/q/tree/gh-pages
+  */
+  
+  #include &lt;unistd.h&gt;
+  #include &lt;pthread.h&gt;
+  #include &lt;string.h&gt;
+  #include &lt;errno.h&gt;
+  #include &lt;sys/time.h&gt;
+  #include &lt;stdio.h&gt;
+  
+  /* some platforms require the program to declare these external */
+  extern char *optarg;
+  extern int optind;
+  extern int optopt;
+  extern int opterr;
+  extern int optreset;
+</td></tr></table></code></pre></small></body></html>
