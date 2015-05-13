@@ -16,7 +16,7 @@
 <body><h1>q_c.txt</h1>
 <script>hljs.initHighlightingOnLoad();</script>
 <small><pre><code id="code"><table border=0 cellpadding=0 cellspacing=0><tr>
-<a name="inc_selftest_h" id="inc_selftest_h"></a><a name="fence_def" id="fence_def"></a><a name="qerr_strs" id="qerr_strs"></a><a name="q_s" id="q_s"></a><a name="pad" id="pad"></a><a name="qerr_chk" id="qerr_chk"></a><a name="alloc_msgs" id="alloc_msgs"></a><a name="fence_set" id="fence_set"></a><a name="fence_chk" id="fence_chk"></a><a name="enqueue" id="enqueue"></a><a name="tailcalc" id="tailcalc"></a><a name="dequeue" id="dequeue"></a><a name="headcalc" id="headcalc"></a><a name="inc_selftest_c" id="inc_selftest_c"></a><td>00001
+<td>00001
 00002
 00003
 00004
@@ -229,16 +229,16 @@
   #include &lt;stdlib.h&gt;
   #include &lt;pthread.h&gt;
   
-  /* If built with "-DSELFTEST" then include extras for unit testing. */
+<span name="inc_selftest_h" id="inc_selftest_h"></span>  /* If built with "-DSELFTEST" then include extras for unit testing. */
   #ifdef SELFTEST
   #  include "q_selftest.h"
   #endif
   
   #include "q.h"
   
-  #define Q_FENCE 0x7d831f20   /* used for testing (random number generated at random.org) */
+<span name="fence_def" id="fence_def"></span>  #define Q_FENCE 0x7d831f20   /* used for testing (random number generated at random.org) */
   
-  /* This list of strings must be kept in sync with the
+<span name="qerr_strs" id="qerr_strs"></span>  /* This list of strings must be kept in sync with the
    * corresponding "QERR_*" constant definitions in "q.h".
    * It is used by the q_qerr_str() function. */
   static char *qerrs[] = {
@@ -253,7 +253,7 @@
   #define BAD_QERR (sizeof(qerrs)/sizeof(qerrs[0]) - 2)
   
   
-  /* message element */
+<span name="q_s" id="q_s"></span>  /* message element */
   struct q_msg_s {
       void *d;
       int in_use;
@@ -263,7 +263,7 @@
   /* q.h contains an empty forward definition of "q_s", and defines "q_t" */
   struct q_s {
       unsigned int enq_cnt;     /* count of successful messages enqueued (tail pointer) */
-      char enq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
+<span name="pad" id="pad"></span>      char enq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
   
       unsigned int deq_cnt;     /* count of successful messages dequeued (head pointer) */
       char deq_pad[CACHE_LINE_SIZE - (sizeof(unsigned int))];  /* align next var on cache line */
@@ -295,7 +295,7 @@
   /* See q.h for doc */
   qerr_t q_create(q_t **rtn_q, unsigned int q_size)
   {
-      /* Sanity check the error code definitions and strings */
+<span name="qerr_chk" id="qerr_chk"></span>      /* Sanity check the error code definitions and strings */
       if (LAST_QERR != BAD_QERR - 1) { return QERR_BUG1; }  /* the QERR_* are out of sync with qerrs[] */
       if (sizeof(q_t) % CACHE_LINE_SIZE != 0) { return QERR_BUG2; }  /* q_t not multiple of cache line size */
   
@@ -307,12 +307,12 @@
       int perr = posix_memalign((void **)&amp;q, CACHE_LINE_SIZE, sizeof(*q));
       if (perr != 0 || q == NULL) { return QERR_MALLOCERR; }
   
-      /* Allocate message storage array (one extra unused element for fence) */
+<span name="alloc_msgs" id="alloc_msgs"></span>      /* Allocate message storage array (one extra unused element for fence) */
       q-&gt;msgs = NULL;
       perr = posix_memalign((void **)&amp;q-&gt;msgs, CACHE_LINE_SIZE, (q_size + 1) * sizeof(q-&gt;msgs[0]) );
       if (perr != 0 || q-&gt;msgs == NULL) { free(q);  return QERR_MALLOCERR; }
   
-      q-&gt;msgs[q_size].d = (void *)Q_FENCE;  /* used by unit tests to insure no overflow */
+<span name="fence_set" id="fence_set"></span>      q-&gt;msgs[q_size].d = (void *)Q_FENCE;  /* used by unit tests to insure no overflow */
   
       /* empty the queue */
       unsigned int i;
@@ -335,7 +335,7 @@
   qerr_t q_delete(q_t *q)
   {
       /* Quick sanity check to make sure the queue didn't overflow */
-      if (q-&gt;msgs[q-&gt;size_mask + 1].d != (void *)Q_FENCE) { return QERR_BUG1; }
+<span name="fence_chk" id="fence_chk"></span>      if (q-&gt;msgs[q-&gt;size_mask + 1].d != (void *)Q_FENCE) { return QERR_BUG1; }
       q-&gt;msgs[q-&gt;size_mask + 1].d = NULL;  /* remove fence to maybe detect double-delete */
   
       free((void *)q-&gt;msgs);
@@ -346,9 +346,9 @@
   
   
   /* See q.h for doc */
-  qerr_t q_enq(q_t *q, void *m)
+<span name="enqueue" id="enqueue"></span>  qerr_t q_enq(q_t *q, void *m)
   {
-      unsigned int tail = (unsigned)(q-&gt;enq_cnt &amp; q-&gt;size_mask);
+<span name="tailcalc" id="tailcalc"></span>      unsigned int tail = (unsigned)(q-&gt;enq_cnt &amp; q-&gt;size_mask);
   
       /* Queue must always have at least one empty slot.  Make sure that
        * after the current tail is filled, the next slot will be empty. */
@@ -363,9 +363,9 @@
   
   
   /* See q.h for doc */
-  qerr_t q_deq(q_t *q, void **rtn_m)
+<span name="dequeue" id="dequeue"></span>  qerr_t q_deq(q_t *q, void **rtn_m)
   {
-      unsigned int head = (unsigned)(q-&gt;deq_cnt &amp; q-&gt;size_mask);
+<span name="headcalc" id="headcalc"></span>      unsigned int head = (unsigned)(q-&gt;deq_cnt &amp; q-&gt;size_mask);
       if (! q-&gt;msgs[head].in_use) { return QERR_EMPTY; }
   
       *rtn_m = (void *)q-&gt;msgs[head].d;
@@ -392,8 +392,93 @@
   }  /* q_is_full */
   
   
-  /* If built with "-DSELFTEST" then include main() for unit testing. */
+<span name="inc_selftest_c" id="inc_selftest_c"></span>  /* If built with "-DSELFTEST" then include main() for unit testing. */
   #ifdef SELFTEST
   #include "q_selftest.c"
   #endif
-</td></tr></table></code></pre></small></body></html>
+</td></tr></table></code>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre></small></body></html>
