@@ -117,3 +117,9 @@ Minor corrections in q_selftest.c.
 * 0.3 (11-May-2015)
 
     Moved to Github.
+
+* 0.4 (19-Jul-2016)
+
+    Added extern "C" {} to simplify usage by C++.  Thanks to [Deep
+    Grant](https://github.com/deepgrant) for the patch!
+
