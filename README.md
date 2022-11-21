@@ -28,6 +28,7 @@ The q module implements a fast, lock-free, non-blocking queue.  Its characterist
 * Single Producer, Single Consumer (SPSC).
 * No dynamic memory allocates or frees during enqueue and dequeue operations.  Messages are stored as void pointers; _null pointers are not allowed_.
 * High performance.  On my Macbook Air, streaming data through a queue averages 11 ns per message (queue size=32), while ping-pong latency is 69 ns (one-way).
+On a Linux server, the ping-pong latency was closer to 150 ns (one-way).
 * Tested on Mac OSX 10.9 (Mavericks) and Linux 2.6 and 3.5 kernels.  At present, I only recommend the 64-bit x86 processor family, due to the fact that I take advantage of its programmer-friendly memory model.  In the future I hope to generalize it to be efficient on other processor types.
 
 You can find q at:
