@@ -11,7 +11,7 @@
 
 OS=`uname`
 
-CACHE_LINE_SIZE=64 # x86, sparc
+CACHE_LINE_SIZE=128 # x86, sparc use 64, but X86 pre-fetches 2 at a time.
 # CACHE_LINE_SIZE=128 # Itanium, PowerPC
 
 COPTS="-g -O3 -DCACHE_LINE_SIZE=$CACHE_LINE_SIZE -pthread"; LIBS=""
