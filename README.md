@@ -3,6 +3,16 @@ Fast, lock-free, non-blocking queue
 
 The q package is a C module which implements a fast, lock-free, non-blocking queue.
 
+<!-- mdtoc-start -->
+&DoubleRightArrow; [q](#q)  
+&nbsp;&nbsp;&DoubleRightArrow; [License](#license)  
+&nbsp;&nbsp;&DoubleRightArrow; [Introduction](#introduction)  
+&nbsp;&nbsp;&DoubleRightArrow; [Quick Start](#quick-start)  
+&nbsp;&nbsp;&DoubleRightArrow; [C API](#c-api)  
+&nbsp;&nbsp;&DoubleRightArrow; [Release Notes](#release-notes)  
+<!-- TOC created by '../mdtoc/mdtoc.pl README.md' (see https://github.com/fordsfords/mdtoc) -->
+<!-- mdtoc-end -->
+
 ## License
 
 Copyright 2014, 2015 Steven Ford http://geeky-boy.com and licensed
