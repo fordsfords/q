@@ -13,7 +13,7 @@
  *     "Implementing Lock-Free Queues"
  * http://people.cs.pitt.edu/~jacklange/teaching/cs2510-f12/papers/implementing_lock_free.pdf
  *     Valois, J.: Implementing lock-free queues. In: Proceedings of the Seventh
- *     International Conference on Parallel and Distributed Computing Systems. (1994) 64–69
+ *     International Conference on Parallel and Distributed Computing Systems. (1994) 64-69
  *
  * See q.h file for details on the API functions.
  */
