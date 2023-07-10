@@ -18,6 +18,12 @@ COPTS="-g -O3 -DCACHE_LINE_SIZE=$CACHE_LINE_SIZE -pthread"; LIBS=""
 
 rm -f *.o q_selftest
 
+# Update doc table of contents (see https://github.com/fordsfords/mdtoc).
+if which mdtoc.pl >/dev/null; then mdtoc.pl -b "" README.md;
+elif [ -x ../mdtoc/mdtoc.pl ]; then ../mdtoc/mdtoc.pl -b "" README.md;
+else echo "FYI: mdtoc.pl not found; see https://github.com/fordsfords/mdtoc"
+fi
+
 # Only build the semlit doc if the semlit.sh tool is available
 # Note that THIS WILL DELETE AND REPLACE THE .c AND .h FILES!
 if which semlit.sh >/dev/null 2>&1; then :
