@@ -32,23 +32,23 @@
 00014
 00015
 00016
-<a href="q.sldoc.html#q_t_ref_1" target="doc">00017</a>
-<a href="q.sldoc.html#q_t_ref_1" target="doc">00018</a>
+00017
+00018
 00019
-<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00020</a>
-<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00021</a>
-<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00022</a>
-<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00023</a>
+00020
+<a href="q.sldoc.html#q_t_ref_1" target="doc">00021</a>
+<a href="q.sldoc.html#q_t_ref_1" target="doc">00022</a>
+00023
 <a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00024</a>
 <a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00025</a>
 <a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00026</a>
 <a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00027</a>
 <a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00028</a>
 <a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00029</a>
-<a href="q.sldoc.html#apis_ref_1" target="doc">00030</a>
-<a href="q.sldoc.html#apis_ref_1" target="doc">00031</a>
-<a href="q.sldoc.html#apis_ref_1" target="doc">00032</a>
-<a href="q.sldoc.html#apis_ref_1" target="doc">00033</a>
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00030</a>
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00031</a>
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00032</a>
+<a href="q.sldoc.html#qerr_defs_ref_1" target="doc">00033</a>
 <a href="q.sldoc.html#apis_ref_1" target="doc">00034</a>
 <a href="q.sldoc.html#apis_ref_1" target="doc">00035</a>
 <a href="q.sldoc.html#apis_ref_1" target="doc">00036</a>
@@ -83,8 +83,16 @@
 <a href="q.sldoc.html#apis_ref_1" target="doc">00065</a>
 <a href="q.sldoc.html#apis_ref_1" target="doc">00066</a>
 <a href="q.sldoc.html#apis_ref_1" target="doc">00067</a>
-00068
-00069
+<a href="q.sldoc.html#apis_ref_1" target="doc">00068</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00069</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00070</a>
+<a href="q.sldoc.html#apis_ref_1" target="doc">00071</a>
+00072
+00073
+00074
+00075
+00076
+00077
 </td><td>  /* q.h - lock-free, non-blocking message queue.  See https://github.com/fordsfords/q/tree/gh-pages */
   /*
   # This code and its documentation is Copyright 2014, 2015 Steven Ford, http://geeky-boy.com
@@ -98,6 +106,10 @@
   
   #ifndef Q_H
   #define Q_H
+  
+  #ifdef __cplusplus
+  extern "C" {
+  #endif
   
   typedef unsigned int qerr_t;     /* see QERR_* definitions above */
   
@@ -152,6 +164,10 @@
   /* Returns a string representation of a queue API return error code.
    * qerr : value returned by most q APIs indicating success or faiure.
    * (See q.h for list of QERR_* definitions.) */
+  
+  #ifdef __cplusplus
+  }
+  #endif
   
   #endif  /* Q_H */
 </td></tr></table></code>

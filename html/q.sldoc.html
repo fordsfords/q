@@ -120,54 +120,54 @@ licensed as <b>public domain (CC0)</b>:</p>
     <h2><a class="mozTocH2" name="mozTocId641188"></a>Q API</h2>
     The API is documented in <tt>q.h</tt>: <a name="apis_ref_1" id="apis_ref_1"></a>
 <small><pre>
-<a href="q_h.slsrc.html#apis" target="src">00020</a>  /* Most q APIs return "qerr_t".  These definitions must
-<a href="q_h.slsrc.html#apis" target="src">00021</a>   * be kept in sync with the "qerrs" string array in "q.c". */
-<a href="q_h.slsrc.html#apis" target="src">00022</a>  #define QERR_OK 0         /* Success */
-<a href="q_h.slsrc.html#apis" target="src">00023</a>  #define QERR_BUG1 1       /* Internal software bug - should never happen */
-<a href="q_h.slsrc.html#apis" target="src">00024</a>  #define QERR_BUG2 2       /* Internal software bug - should never happen */
-<a href="q_h.slsrc.html#apis" target="src">00025</a>  #define QERR_BADSIZE 3    /* q_size parameter invalid */
-<a href="q_h.slsrc.html#apis" target="src">00026</a>  #define QERR_MALLOCERR 4  /* No memory available */
-<a href="q_h.slsrc.html#apis" target="src">00027</a>  #define QERR_FULL 5       /* No room in queue */
-<a href="q_h.slsrc.html#apis" target="src">00028</a>  #define QERR_EMPTY 6      /* No messages in queue */
-<a href="q_h.slsrc.html#apis" target="src">00029</a>  #define LAST_QERR 6   /* Set to value of last "QERR_*" definition */
-<a href="q_h.slsrc.html#apis" target="src">00030</a>  
-<a href="q_h.slsrc.html#apis" target="src">00031</a>  qerr_t q_create(q_t **rtn_q, unsigned int q_size);
-<a href="q_h.slsrc.html#apis" target="src">00032</a>  /* Create an instance of a queue.
-<a href="q_h.slsrc.html#apis" target="src">00033</a>   * rtn_q  : Pointer to caller's queue instance handle.
-<a href="q_h.slsrc.html#apis" target="src">00034</a>   * q_size : Number of queue elements to allocate.  Must be &gt; 1 and a power
-<a href="q_h.slsrc.html#apis" target="src">00035</a>   *          of 2.  Due to the nature of the algorithm used, a maximum of
-<a href="q_h.slsrc.html#apis" target="src">00036</a>   *          q_size - 1 elements can actually be stored in the queue.
-<a href="q_h.slsrc.html#apis" target="src">00037</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
-<a href="q_h.slsrc.html#apis" target="src">00038</a>  
-<a href="q_h.slsrc.html#apis" target="src">00039</a>  qerr_t q_delete(q_t *q);
-<a href="q_h.slsrc.html#apis" target="src">00040</a>  /* Delete an instance of a queue.
-<a href="q_h.slsrc.html#apis" target="src">00041</a>   * q : Queue instance handle.
-<a href="q_h.slsrc.html#apis" target="src">00042</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
-<a href="q_h.slsrc.html#apis" target="src">00043</a>  
-<a href="q_h.slsrc.html#apis" target="src">00044</a>  qerr_t q_enq( q_t *q, void *m);
-<a href="q_h.slsrc.html#apis" target="src">00045</a>  /* Add a message to the queue.
-<a href="q_h.slsrc.html#apis" target="src">00046</a>   * q : Queue instance handle.
-<a href="q_h.slsrc.html#apis" target="src">00047</a>   * m : Message to enqueue.
-<a href="q_h.slsrc.html#apis" target="src">00048</a>   * Returns QERR_OK on success, QERR_FULL if queue full, or other QERR_* value on error. */
-<a href="q_h.slsrc.html#apis" target="src">00049</a>  
-<a href="q_h.slsrc.html#apis" target="src">00050</a>  qerr_t q_deq(q_t *q, void **rtn_m);
-<a href="q_h.slsrc.html#apis" target="src">00051</a>  /* Remove a message from the queue.
-<a href="q_h.slsrc.html#apis" target="src">00052</a>   * q     : Queue instance handle.
-<a href="q_h.slsrc.html#apis" target="src">00053</a>   * rtn_m : Pointer to caller's message handle.
-<a href="q_h.slsrc.html#apis" target="src">00054</a>   * Returns QERR_OK on success, QERR_EMPTY if queue empty, or other QERR_* value on error. */
-<a href="q_h.slsrc.html#apis" target="src">00055</a>  
-<a href="q_h.slsrc.html#apis" target="src">00056</a>  int q_is_empty(q_t *q);
-<a href="q_h.slsrc.html#apis" target="src">00057</a>  /* Returns 1 if queue is empty (contains no messages), 0 otherwise.
-<a href="q_h.slsrc.html#apis" target="src">00058</a>   * q : Queue instance handle. */
+<a href="q_h.slsrc.html#apis" target="src">00024</a>  /* Most q APIs return "qerr_t".  These definitions must
+<a href="q_h.slsrc.html#apis" target="src">00025</a>   * be kept in sync with the "qerrs" string array in "q.c". */
+<a href="q_h.slsrc.html#apis" target="src">00026</a>  #define QERR_OK 0         /* Success */
+<a href="q_h.slsrc.html#apis" target="src">00027</a>  #define QERR_BUG1 1       /* Internal software bug - should never happen */
+<a href="q_h.slsrc.html#apis" target="src">00028</a>  #define QERR_BUG2 2       /* Internal software bug - should never happen */
+<a href="q_h.slsrc.html#apis" target="src">00029</a>  #define QERR_BADSIZE 3    /* q_size parameter invalid */
+<a href="q_h.slsrc.html#apis" target="src">00030</a>  #define QERR_MALLOCERR 4  /* No memory available */
+<a href="q_h.slsrc.html#apis" target="src">00031</a>  #define QERR_FULL 5       /* No room in queue */
+<a href="q_h.slsrc.html#apis" target="src">00032</a>  #define QERR_EMPTY 6      /* No messages in queue */
+<a href="q_h.slsrc.html#apis" target="src">00033</a>  #define LAST_QERR 6   /* Set to value of last "QERR_*" definition */
+<a href="q_h.slsrc.html#apis" target="src">00034</a>  
+<a href="q_h.slsrc.html#apis" target="src">00035</a>  qerr_t q_create(q_t **rtn_q, unsigned int q_size);
+<a href="q_h.slsrc.html#apis" target="src">00036</a>  /* Create an instance of a queue.
+<a href="q_h.slsrc.html#apis" target="src">00037</a>   * rtn_q  : Pointer to caller's queue instance handle.
+<a href="q_h.slsrc.html#apis" target="src">00038</a>   * q_size : Number of queue elements to allocate.  Must be &gt; 1 and a power
+<a href="q_h.slsrc.html#apis" target="src">00039</a>   *          of 2.  Due to the nature of the algorithm used, a maximum of
+<a href="q_h.slsrc.html#apis" target="src">00040</a>   *          q_size - 1 elements can actually be stored in the queue.
+<a href="q_h.slsrc.html#apis" target="src">00041</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
+<a href="q_h.slsrc.html#apis" target="src">00042</a>  
+<a href="q_h.slsrc.html#apis" target="src">00043</a>  qerr_t q_delete(q_t *q);
+<a href="q_h.slsrc.html#apis" target="src">00044</a>  /* Delete an instance of a queue.
+<a href="q_h.slsrc.html#apis" target="src">00045</a>   * q : Queue instance handle.
+<a href="q_h.slsrc.html#apis" target="src">00046</a>   * Returns QERR_OK on success, or other QERR_* value on error. */
+<a href="q_h.slsrc.html#apis" target="src">00047</a>  
+<a href="q_h.slsrc.html#apis" target="src">00048</a>  qerr_t q_enq( q_t *q, void *m);
+<a href="q_h.slsrc.html#apis" target="src">00049</a>  /* Add a message to the queue.
+<a href="q_h.slsrc.html#apis" target="src">00050</a>   * q : Queue instance handle.
+<a href="q_h.slsrc.html#apis" target="src">00051</a>   * m : Message to enqueue.
+<a href="q_h.slsrc.html#apis" target="src">00052</a>   * Returns QERR_OK on success, QERR_FULL if queue full, or other QERR_* value on error. */
+<a href="q_h.slsrc.html#apis" target="src">00053</a>  
+<a href="q_h.slsrc.html#apis" target="src">00054</a>  qerr_t q_deq(q_t *q, void **rtn_m);
+<a href="q_h.slsrc.html#apis" target="src">00055</a>  /* Remove a message from the queue.
+<a href="q_h.slsrc.html#apis" target="src">00056</a>   * q     : Queue instance handle.
+<a href="q_h.slsrc.html#apis" target="src">00057</a>   * rtn_m : Pointer to caller's message handle.
+<a href="q_h.slsrc.html#apis" target="src">00058</a>   * Returns QERR_OK on success, QERR_EMPTY if queue empty, or other QERR_* value on error. */
 <a href="q_h.slsrc.html#apis" target="src">00059</a>  
-<a href="q_h.slsrc.html#apis" target="src">00060</a>  int q_is_full(q_t *q);
-<a href="q_h.slsrc.html#apis" target="src">00061</a>  /* Returns 1 if queue is full (contains q_size-1 message), 0 otherwise.
+<a href="q_h.slsrc.html#apis" target="src">00060</a>  int q_is_empty(q_t *q);
+<a href="q_h.slsrc.html#apis" target="src">00061</a>  /* Returns 1 if queue is empty (contains no messages), 0 otherwise.
 <a href="q_h.slsrc.html#apis" target="src">00062</a>   * q : Queue instance handle. */
 <a href="q_h.slsrc.html#apis" target="src">00063</a>  
-<a href="q_h.slsrc.html#apis" target="src">00064</a>  char *q_qerr_str(qerr_t qerr);
-<a href="q_h.slsrc.html#apis" target="src">00065</a>  /* Returns a string representation of a queue API return error code.
-<a href="q_h.slsrc.html#apis" target="src">00066</a>   * qerr : value returned by most q APIs indicating success or faiure.
-<a href="q_h.slsrc.html#apis" target="src">00067</a>   * (See q.h for list of QERR_* definitions.) */
+<a href="q_h.slsrc.html#apis" target="src">00064</a>  int q_is_full(q_t *q);
+<a href="q_h.slsrc.html#apis" target="src">00065</a>  /* Returns 1 if queue is full (contains q_size-1 message), 0 otherwise.
+<a href="q_h.slsrc.html#apis" target="src">00066</a>   * q : Queue instance handle. */
+<a href="q_h.slsrc.html#apis" target="src">00067</a>  
+<a href="q_h.slsrc.html#apis" target="src">00068</a>  char *q_qerr_str(qerr_t qerr);
+<a href="q_h.slsrc.html#apis" target="src">00069</a>  /* Returns a string representation of a queue API return error code.
+<a href="q_h.slsrc.html#apis" target="src">00070</a>   * qerr : value returned by most q APIs indicating success or faiure.
+<a href="q_h.slsrc.html#apis" target="src">00071</a>   * (See q.h for list of QERR_* definitions.) */
 </pre><!-- endblock apis_ref_1 --></small>
 
 
@@ -399,8 +399,8 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     The API sees an empty forward reference and type in <tt>q.h</tt>:
     <a name="q_t_ref_1" id="q_t_ref_1"></a>
 <small><pre>
-<a href="q_h.slsrc.html#q_t" target="src">00017</a>  struct q_s;                       /* forward (opaque) definition */
-<a href="q_h.slsrc.html#q_t" target="src">00018</a>  typedef struct q_s q_t;           /* object type of queue instance */
+<a href="q_h.slsrc.html#q_t" target="src">00021</a>  struct q_s;                       /* forward (opaque) definition */
+<a href="q_h.slsrc.html#q_t" target="src">00022</a>  typedef struct q_s q_t;           /* object type of queue instance */
 </pre><!-- endblock q_t_ref_1 --></small>
 
 <br>
@@ -440,16 +440,16 @@ href="http://people.cs.pitt.edu/%7Ejacklange/teaching/cs2510-f12/papers/implemen
     function).&nbsp; The manifest constants are defined in <tt>q.h</tt>:
     <a name="qerr_defs_ref_1" id="qerr_defs_ref_1"></a>
 <small><pre>
-<a href="q_h.slsrc.html#qerr_defs" target="src">00020</a>  /* Most q APIs return "qerr_t".  These definitions must
-<a href="q_h.slsrc.html#qerr_defs" target="src">00021</a>   * be kept in sync with the "qerrs" string array in "q.c". */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00022</a>  #define QERR_OK 0         /* Success */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00023</a>  #define QERR_BUG1 1       /* Internal software bug - should never happen */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00024</a>  #define QERR_BUG2 2       /* Internal software bug - should never happen */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00025</a>  #define QERR_BADSIZE 3    /* q_size parameter invalid */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00026</a>  #define QERR_MALLOCERR 4  /* No memory available */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00027</a>  #define QERR_FULL 5       /* No room in queue */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00028</a>  #define QERR_EMPTY 6      /* No messages in queue */
-<a href="q_h.slsrc.html#qerr_defs" target="src">00029</a>  #define LAST_QERR 6   /* Set to value of last "QERR_*" definition */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00024</a>  /* Most q APIs return "qerr_t".  These definitions must
+<a href="q_h.slsrc.html#qerr_defs" target="src">00025</a>   * be kept in sync with the "qerrs" string array in "q.c". */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00026</a>  #define QERR_OK 0         /* Success */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00027</a>  #define QERR_BUG1 1       /* Internal software bug - should never happen */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00028</a>  #define QERR_BUG2 2       /* Internal software bug - should never happen */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00029</a>  #define QERR_BADSIZE 3    /* q_size parameter invalid */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00030</a>  #define QERR_MALLOCERR 4  /* No memory available */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00031</a>  #define QERR_FULL 5       /* No room in queue */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00032</a>  #define QERR_EMPTY 6      /* No messages in queue */
+<a href="q_h.slsrc.html#qerr_defs" target="src">00033</a>  #define LAST_QERR 6   /* Set to value of last "QERR_*" definition */
 </pre><!-- endblock qerr_defs_ref_1 --></small>
 
  The strings are defined in <tt>q.c</tt>:

@@ -12,6 +12,10 @@
 #ifndef Q_H
 #define Q_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef unsigned int qerr_t;     /* see QERR_* definitions above */
 
 =semlit,block,q_t=
@@ -71,5 +75,9 @@ char *q_qerr_str(qerr_t qerr);
  * qerr : value returned by most q APIs indicating success or faiure.
  * (See q.h for list of QERR_* definitions.) */
 =semlit,endblock,apis=
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  /* Q_H */

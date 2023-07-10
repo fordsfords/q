@@ -12,6 +12,10 @@
 #ifndef Q_H
 #define Q_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef unsigned int qerr_t;     /* see QERR_* definitions above */
 
 struct q_s;                       /* forward (opaque) definition */
@@ -65,5 +69,9 @@ char *q_qerr_str(qerr_t qerr);
 /* Returns a string representation of a queue API return error code.
  * qerr : value returned by most q APIs indicating success or faiure.
  * (See q.h for list of QERR_* definitions.) */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  /* Q_H */
