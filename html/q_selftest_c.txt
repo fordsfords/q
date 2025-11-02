@@ -2,15 +2,16 @@
 /* This file is included by q.c for unit testing when it is built with "-DSELFTEST".
  * It is structured this way so that whitebox testing can be performed (i.e. selftest code has
  * visibility into q.c's private structures). */
-/*
-# This code and its documentation is Copyright 2014, 2015 Steven Ford, http://geeky-boy.com
-# and licensed "public domain" style under Creative Commons "CC0": http://creativecommons.org/publicdomain/zero/1.0/
-# To the extent possible under law, the contributors to this project have
-# waived all copyright and related or neighboring rights to this work.
-# In other words, you can use this code for any purpose without any
-# restrictions.  This work is published from: United States.  The project home
-# is https://github.com/fordsfords/q/tree/gh-pages
-*/
+
+/* This work is dedicated to the public domain under CC0 1.0 Universal:
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ * 
+ * To the extent possible under law, Steven Ford has waived all copyright
+ * and related or neighboring rights to this work. In other words, you can 
+ * use this code for any purpose without any restrictions.
+ * This work is published from: United States.
+ * Project home: https://github.com/fordsfords/q
+ */
 
 #define UINT unsigned int
 #define V2I (unsigned long long)(void *)
